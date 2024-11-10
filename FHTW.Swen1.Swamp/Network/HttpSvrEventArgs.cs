@@ -4,9 +4,9 @@ using System.Net.Sockets;
 
 
 //4)
-namespace FHTW.Swen1.Swamp
+namespace FHTW.Swen1.Swamp.Network
 {
-    public class HttpSvrEventArgs: EventArgs  //Defines a class HttpSvrEventArgs which inherits from EventArgs
+    public class HttpSvrEventArgs : EventArgs  //Defines a class HttpSvrEventArgs which inherits from EventArgs
     {
         protected TcpClient _Client;
 

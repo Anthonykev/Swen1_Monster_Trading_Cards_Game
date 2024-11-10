@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 //5)
 
-namespace FHTW.Swen1.Swamp
+namespace FHTW.Swen1.Swamp.Network
 {
     public class HttpHeader  //Declares a class HttpHeader which represents a single HTTP header.
     {
@@ -21,7 +21,7 @@ namespace FHTW.Swen1.Swamp
                 Name = header.Substring(0, n).Trim(); //Extracts the part of the header string before : and trims any whitespace, assigning it to Name.
                 Value = header.Substring(n + 1).Trim();
             }
-            catch(Exception) {}
+            catch (Exception) { }
         }
 
 

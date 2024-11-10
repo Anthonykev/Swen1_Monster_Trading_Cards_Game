@@ -7,9 +7,10 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
+
 // 2)
 
-namespace FHTW.Swen1.Swamp
+namespace FHTW.Swen1.Swamp.Network
 {
     public sealed class HttpSvr
     {

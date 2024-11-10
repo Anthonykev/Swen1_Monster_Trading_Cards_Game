@@ -1,5 +1,5 @@
 ﻿using System;
-
+using FHTW.Swen1.Swamp.Models;
 
 
 namespace FHTW.Swen1.Swamp
@@ -11,6 +11,10 @@ namespace FHTW.Swen1.Swamp
         static void Main(string[] args)
         {
             Console.WriteLine("Hello, World!");
+
+            User player = new User { Username = "Player1", Password = "password123" };
+            player.AddPackage();
+            
         }
     }
 }
