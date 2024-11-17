@@ -37,7 +37,8 @@ namespace FHTW.Swen1.Swamp.Models
             {
                 return new MonsterCard(cardName);
             }
-            else if (cardName == "Wizzard" || cardName == "Tetsu" || cardName == "Amaterasu" || cardName == "Bankai") // SpellCards
+            else if (cardName == "Wizzard" || cardName == "Tetsu" || cardName == "Amaterasu" ||
+                     cardName == "Bankai") // SpellCards
             {
                 return new SpellCard(cardName);
             }
@@ -85,7 +86,20 @@ namespace FHTW.Swen1.Swamp.Models
         /// </summary>
         public void ChooseDeck()
         {
-            // ich muss noch überlegen, noch kein plan
+            // ich muss mir das noch überlegen, noch kein plan
+        }
+
+        public void printStack()
+        {
+            Console.WriteLine("----------------------------------------------------------------");
+            Console.WriteLine("A list of all stored cards!!!");
+
+            foreach (Card item in Stack)
+            {
+                Console.WriteLine(item);
+            }
+
+
         }
     }
 }

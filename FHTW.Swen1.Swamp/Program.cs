@@ -14,6 +14,7 @@ namespace FHTW.Swen1.Swamp
 
             User player = new User { Username = "Player1", Password = "password123" };
             player.AddPackage();
+            player.printStack();
             
         }
     }
@@ -24,6 +25,7 @@ namespace FHTW.Swen1.Swamp
 
 
 
+//Eigene Klasse für Deck erstellen und dort die Logig schon mal einbauen 
 
 
 /*
