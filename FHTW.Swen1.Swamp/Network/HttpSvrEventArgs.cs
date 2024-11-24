@@ -1,52 +1,177 @@
 ﻿using System;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
+using System.Text;
 
 
 //4)
 namespace FHTW.Swen1.Swamp.Network
 {
-    public class HttpSvrEventArgs : EventArgs  //Defines a class HttpSvrEventArgs which inherits from EventArgs
+    /// <summary>This class defines event arguments for the <see cref="HttpSvrEventHandler"/> event handler.</summary>
+    public class HttpSvrEventArgs : EventArgs
     {
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // protected members                                                                                                //
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /// <summary>TCP client.</summary>
         protected TcpClient _Client;
 
 
-        public HttpSvrEventArgs(TcpClient client, string plainMessage)  //A constructor that initializes the class with a TcpClient object and a plain message 
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // constructors                                                                                                     //
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /// <summary>Creates a new instance of this class.</summary>
+        /// <param name="client">TCP client.</param>
+        /// <param name="plainMessage">Plain HTTP message.</param>
+        public HttpSvrEventArgs(TcpClient client, string plainMessage)
         {
             _Client = client;
 
+            PlainMessage = plainMessage;
+            Payload = string.Empty;
+
+            string[] lines = plainMessage.Replace("\r\n", "\n").Split('\n');
+            bool inheaders = true;
+            List<HttpHeader> headers = new();
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                if (i == 0)
+                {
+                    string[] inc = lines[0].Split(' ');
+                    Method = inc[0];
+                    Path = inc[1];
+                    continue;
+                }
+
+                if (inheaders)
+                {
+                    if (string.IsNullOrWhiteSpace(lines[i]))
+                    {
+                        inheaders = false;
+                    }
+                    else { headers.Add(new(lines[i])); }
+                }
+                else
+                {
+                    if (!string.IsNullOrWhiteSpace(Payload)) { Payload += "\r\n"; }
+                    Payload += lines[i];
+                }
+            }
+
+            Headers = headers.ToArray();
         }
 
 
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // public properties                                                                                                //
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /// <summary>Gets the plain message.</summary>
         public string PlainMessage
         {
             get; protected set;
         } = string.Empty;
 
 
+        /// <summary>Gets the HTTP method.</summary>
         public virtual string Method
         {
             get; protected set;
         } = string.Empty;
 
 
+        /// <summary>Gets the HTTP path.</summary>
         public virtual string Path
         {
             get; protected set;
         } = string.Empty;
 
 
+        /// <summary>Gets the HTTP headers.</summary>
         public virtual HttpHeader[] Headers
         {
             get; protected set;
         } = Array.Empty<HttpHeader>();
 
 
+        /// <summary>Gets the payload.</summary>
         public virtual string Payload
         {
             get; protected set;
         } = string.Empty;
 
-        //The = string.Empty; at the end of each property is an initialization statement.It means that the property is given an initial value of an empty string ("") when an instance of the class is created.
+
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // public methods                                                                                                   //
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /// <summary>Replies the request</summary>
+        /// <param name="status">HTTP Status code.</param>
+        /// <param name="msg">Reply body.</param>
+       
+
+        public void Reply(int status, string? body = null)
+        {
+            // Prüfen, ob der Client null ist
+            if (_Client == null)
+            {
+                Console.WriteLine("No client available to send a response.");
+                return;
+            }
+
+            string data;
+
+            // Statuscodes behandeln
+            switch (status)
+            {
+                case 200:
+                    data = "HTTP/1.1 200 OK\n"; break;
+                case 400:
+                    data = "HTTP/1.1 400 Bad Request\n"; break;
+                case 401:
+                    data = "HTTP/1.1 401 Unauthorized\n"; break;
+                case 404:
+                    data = "HTTP/1.1 404 Not Found\n"; break;
+                default:
+                    data = $"HTTP/1.1 {status} Status unknown\n"; break;
+            }
+
+            // Header und Body anfügen
+            if (string.IsNullOrEmpty(body))
+            {
+                data += "Content-Length: 0\n";
+            }
+            data += "Content-Type: text/plain\n\n";
+            if (!string.IsNullOrEmpty(body))
+            {
+                data += body;
+            }
+
+            // Antwort senden
+            try
+            {
+                byte[] buf = Encoding.ASCII.GetBytes(data);
+                using (var stream = _Client.GetStream()) // Sicherstellen, dass der Stream geschlossen wird
+                {
+                    stream.Write(buf, 0, buf.Length);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending response: {ex.Message}");
+            }
+            finally
+            {
+                // Client schließen und freigeben
+                _Client.Close();
+                _Client.Dispose();
+            }
+        }
     }
 }
