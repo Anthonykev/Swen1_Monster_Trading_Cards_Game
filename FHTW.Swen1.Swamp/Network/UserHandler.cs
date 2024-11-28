@@ -97,16 +97,93 @@ namespace FHTW.Swen1.Swamp.Network
                 e.Reply(status, reply?.ToJsonString());
                 return true;
             }
-            else if (e.Path.StartsWith("user"))
+            else if (e.Path.StartsWith("/users"))
             {
-                // bla
-                if (e.Method == "GET")
-                {
-                    // bla...
-                }
+                JsonObject? reply = null;
+                int status = HttpStatusCode.BAD_REQUEST;
 
-                //e.Reply()
-                return true;
+                // Wenn es sich um eine Anfrage zum Abrufen aller Benutzer handelt (z.B. "/users")
+                if (e.Method == "GET" && e.Path == "/users")
+                {
+                    // Überprüfen, ob die Anfrage authentifiziert ist (falls gewünscht)
+                    (bool Success, User? User) ses = Token.Authenticate(e);
+
+                    if (ses.Success)
+                    {
+                        // Erstelle eine Liste von Nutzern
+                        JsonArray usersArray = new JsonArray();
+                        foreach (var user in User.GetAllUsers()) // Angenommen, wir haben eine Methode GetAllUsers() in der User-Klasse
+                        {
+                            usersArray.Add(new JsonObject()
+                            {
+                                ["username"] = user.UserName,
+                                ["fullname"] = user.FullName,
+                                ["email"] = user.EMail
+                            });
+                        }
+
+                        status = HttpStatusCode.OK;
+                        reply = new JsonObject()
+                        {
+                            ["success"] = true,
+                            ["users"] = usersArray
+                        };
+                    }
+                    else
+                    {
+                        status = HttpStatusCode.UNAUTHORIZED;
+                        reply = new JsonObject()
+                        {
+                            ["success"] = false,
+                            ["message"] = "Unauthorized."
+                        };
+                    }
+
+                    e.Reply(status, reply?.ToJsonString());
+                    return true;
+                }
+                // Wenn es sich um eine Anfrage zu einem bestimmten Benutzer handelt (z.B. "/users/{username}")
+                else if (e.Method == "GET" && e.Path.StartsWith("/users/"))
+                {
+                    string requestedUser = e.Path.Substring("/users/".Length);
+
+                    if (User.Exists(requestedUser)) 
+                    {
+                        User? user = User.Get(requestedUser); 
+                        if (user != null)
+                        {
+                            status = HttpStatusCode.OK;
+                            reply = new JsonObject()
+                            {
+                                ["success"] = true,
+                                ["username"] = user.UserName,
+                                ["fullname"] = user.FullName,
+                                ["email"] = user.EMail
+                            };
+                        }
+                        else
+                        {
+                            status = HttpStatusCode.NOT_FOUND;
+                            reply = new JsonObject()
+                            {
+                                ["success"] = false,
+                                ["message"] = "User not found."
+                            };
+                        }
+                    }
+                    else
+                    {
+                        status = HttpStatusCode.NOT_FOUND;
+                        reply = new JsonObject()
+                        {
+                            ["success"] = false,
+                            ["message"] = "User not found."
+                        };
+                    }
+
+                    e.Reply(status, reply?.ToJsonString());
+                    return true;
+                }
             }
 
             return false;

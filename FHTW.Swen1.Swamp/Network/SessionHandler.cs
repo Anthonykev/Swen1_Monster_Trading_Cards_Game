@@ -37,7 +37,7 @@ namespace FHTW.Swen1.Swamp.Network
                             reply = new JsonObject()
                             {
                                 ["success"] = true,
-                                ["message"] = "User created.",
+                                ["message"] = "User logged in.",
                                 ["token"] = result.Token
                             };
                         }

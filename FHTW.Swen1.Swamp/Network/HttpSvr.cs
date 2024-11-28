@@ -1,13 +1,8 @@
 ﻿using FHTW.Swen1.Swamp.Network;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
-
-// 2)
 
 namespace FHTW.Swen1.Swamp.Network
 {
@@ -46,60 +41,43 @@ namespace FHTW.Swen1.Swamp.Network
 
             Active = true;
             _Listener = new TcpListener(IPAddress.Parse("127.0.0.1"), 12000);
+            _Listener.Start();
 
-            try
+            byte[] buf = new byte[256];
+
+            while (Active)
             {
-                Console.WriteLine("Server is starting...");
-                _Listener.Start();
-                Console.WriteLine("Server is listening on http://127.0.0.1:12000");
+                Console.WriteLine("Waiting for a connection...");
+                TcpClient client = _Listener.AcceptTcpClient();
+                Console.WriteLine("Connection accepted!");
 
-                while (Active)
+                try
                 {
-                    Console.WriteLine("Waiting for a connection...");
-                    using (TcpClient client = _Listener.AcceptTcpClient()) // Automatisches Schließen des Clients
+                    string data = string.Empty;
+                    using (var stream = client.GetStream())
                     {
-                        Console.WriteLine("Connection accepted!");
-
-                        try
+                        while (stream.DataAvailable || string.IsNullOrWhiteSpace(data))
                         {
-                            string data = string.Empty;
-
-                            using (var stream = client.GetStream())
-                            {
-                                // Daten lesen
-                                byte[] buf = new byte[256];
-                                while (stream.DataAvailable || string.IsNullOrWhiteSpace(data))
-                                {
-                                    int n = stream.Read(buf, 0, buf.Length);
-                                    data += Encoding.ASCII.GetString(buf, 0, n);
-                                }
-
-                                Console.WriteLine($"Received data: {data}");
-
-                                // Antwort senden
-                                string response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello, World!";
-                                byte[] responseBytes = Encoding.ASCII.GetBytes(response);
-                                stream.Write(responseBytes, 0, responseBytes.Length);
-                                Console.WriteLine("Response sent.");
-
-                                // Daten für Event vorbereiten
-                                string requestData = data; // Hier speichern wir die empfangenen Daten
-                                Incoming?.Invoke(this, new HttpSvrEventArgs(null, requestData));
-                            }
+                            int n = stream.Read(buf, 0, buf.Length);
+                            data += Encoding.ASCII.GetString(buf, 0, n);
                         }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"Error handling client: {ex.Message}");
-                        }
-                    } // TcpClient wird hier geschlossen
+
+                        //Console.WriteLine($"Received data: {data}");
+
+                        // Trigger the event for incoming data processing
+                        Incoming?.Invoke(this, new HttpSvrEventArgs(client, data));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error handling client: {ex.Message}");
+                }
+                finally
+                {
+                    client.Close(); // Make sure to close the client connection
                 }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Server error: {ex.Message}");
-            }
         }
-
 
         /// <summary>Stops the server.</summary>
         public void Stop()
