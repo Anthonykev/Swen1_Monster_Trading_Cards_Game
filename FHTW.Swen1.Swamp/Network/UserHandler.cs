@@ -24,11 +24,11 @@ namespace FHTW.Swen1.Swamp.Network
         /// <param name="e">Event arguments.</param>
         public override bool Handle(HttpSvrEventArgs e)
         {
+            JsonObject? reply = null;
+            int status = HttpStatusCode.BAD_REQUEST;
+
             if ((e.Path.TrimEnd('/', ' ', '\t') == "/users") && (e.Method == "POST"))
             {
-                JsonObject? reply = null;
-                int status = HttpStatusCode.BAD_REQUEST;
-
                 try
                 {
                     JsonNode? json = JsonNode.Parse(e.Payload);
@@ -68,9 +68,6 @@ namespace FHTW.Swen1.Swamp.Network
             }
             else if ((e.Path == "/users/me") && (e.Method == "GET"))
             {
-                JsonObject? reply = null;
-                int status = HttpStatusCode.BAD_REQUEST;
-
                 (bool Success, User? User) ses = Token.Authenticate(e);
 
                 if (ses.Success)
@@ -99,20 +96,15 @@ namespace FHTW.Swen1.Swamp.Network
             }
             else if (e.Path.StartsWith("/users"))
             {
-                JsonObject? reply = null;
-                int status = HttpStatusCode.BAD_REQUEST;
-
-                // Wenn es sich um eine Anfrage zum Abrufen aller Benutzer handelt (z.B. "/users")
+                // Abrufen aller Benutzer
                 if (e.Method == "GET" && e.Path == "/users")
                 {
-                    // Überprüfen, ob die Anfrage authentifiziert ist (falls gewünscht)
                     (bool Success, User? User) ses = Token.Authenticate(e);
 
                     if (ses.Success)
                     {
-                        // Erstelle eine Liste von Nutzern
                         JsonArray usersArray = new JsonArray();
-                        foreach (var user in User.GetAllUsers()) // Angenommen, wir haben eine Methode GetAllUsers() in der User-Klasse
+                        foreach (var user in User.GetAllUsers())
                         {
                             usersArray.Add(new JsonObject()
                             {
@@ -142,14 +134,14 @@ namespace FHTW.Swen1.Swamp.Network
                     e.Reply(status, reply?.ToJsonString());
                     return true;
                 }
-                // Wenn es sich um eine Anfrage zu einem bestimmten Benutzer handelt (z.B. "/users/{username}")
+                // Abrufen eines bestimmten Benutzers
                 else if (e.Method == "GET" && e.Path.StartsWith("/users/"))
                 {
                     string requestedUser = e.Path.Substring("/users/".Length);
 
-                    if (User.Exists(requestedUser)) 
+                    if (User.Exists(requestedUser))
                     {
-                        User? user = User.Get(requestedUser); 
+                        User? user = User.Get(requestedUser);
                         if (user != null)
                         {
                             status = HttpStatusCode.OK;
@@ -178,6 +170,62 @@ namespace FHTW.Swen1.Swamp.Network
                         {
                             ["success"] = false,
                             ["message"] = "User not found."
+                        };
+                    }
+
+                    e.Reply(status, reply?.ToJsonString());
+                    return true;
+                }
+                // Hinzufügen eines Kartenpakets zum Stack des Benutzers
+                else if (e.Method == "POST" && e.Path.EndsWith("/stack/add-package"))
+                {
+                    (bool Success, User? User) ses = Token.Authenticate(e);
+
+                    if (ses.Success)
+                    {
+                        ses.User!.AddPackage();
+                        status = HttpStatusCode.OK;
+                        reply = new JsonObject()
+                        {
+                            ["success"] = true,
+                            ["message"] = "Package added to user's stack."
+                        };
+                    }
+                    else
+                    {
+                        status = HttpStatusCode.UNAUTHORIZED;
+                        reply = new JsonObject()
+                        {
+                            ["success"] = false,
+                            ["message"] = "Unauthorized."
+                        };
+                    }
+
+                    e.Reply(status, reply?.ToJsonString());
+                    return true;
+                }
+                // Auswählen eines neuen Decks aus dem Stack
+                else if (e.Method == "POST" && e.Path.EndsWith("/deck/choose"))
+                {
+                    (bool Success, User? User) ses = Token.Authenticate(e);
+
+                    if (ses.Success)
+                    {
+                        ses.User!.ChooseDeck();
+                        status = HttpStatusCode.OK;
+                        reply = new JsonObject()
+                        {
+                            ["success"] = true,
+                            ["message"] = "Deck selected from user's stack."
+                        };
+                    }
+                    else
+                    {
+                        status = HttpStatusCode.UNAUTHORIZED;
+                        reply = new JsonObject()
+                        {
+                            ["success"] = false,
+                            ["message"] = "Unauthorized."
                         };
                     }
 

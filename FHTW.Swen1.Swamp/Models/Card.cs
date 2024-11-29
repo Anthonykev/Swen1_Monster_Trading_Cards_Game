@@ -78,23 +78,24 @@ namespace FHTW.Swen1.Swamp.Models
         {
             double effectiveness = 1.0;
 
-            // Beispiel: Abhängigkeit des Schadens basierend auf den Typen (später erweiterbar)
-            if ((CardElementType == ElementType.Fire && opponent.CardElementType == ElementType.Normal) ||
-                (CardElementType == ElementType.Water && opponent.CardElementType == ElementType.Fire))
-                
+            // Effektivitätsregel basierend auf den Typen
+            if ((CardElementType == ElementType.Water && opponent.CardElementType == ElementType.Fire) ||
+                (CardElementType == ElementType.Fire && opponent.CardElementType == ElementType.Normal) ||
+                (CardElementType == ElementType.Normal && opponent.CardElementType == ElementType.Water))
             {
                 effectiveness = 2.0; // Doppelter Schaden
             }
-            else if ((CardElementType == ElementType.Fire && opponent.CardElementType == ElementType.Water))  
+            else if ((CardElementType == ElementType.Fire && opponent.CardElementType == ElementType.Water) ||
+                     (CardElementType == ElementType.Normal && opponent.CardElementType == ElementType.Fire) ||
+                     (CardElementType == ElementType.Water && opponent.CardElementType == ElementType.Normal))
             {
                 effectiveness = 0.5; // Halber Schaden
             }
-            
+            // Keine Änderung bei gleichen Typen oder nicht definierten Regeln
 
             double totalDamage = Damage * effectiveness;
             return totalDamage;
         }
-
         public abstract void PlayCard();
     }
 }
