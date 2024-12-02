@@ -3,13 +3,7 @@ using FHTW.Swen1.Swamp.Models;
 using FHTW.Swen1.Swamp.Exceptions;
 using FHTW.Swen1.Swamp.Network;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 
 namespace FHTW.Swen1.Swamp.Network
 {
@@ -27,6 +21,7 @@ namespace FHTW.Swen1.Swamp.Network
             JsonObject? reply = null;
             int status = HttpStatusCode.BAD_REQUEST;
 
+            // Benutzer erstellen
             if ((e.Path.TrimEnd('/', ' ', '\t') == "/users") && (e.Method == "POST"))
             {
                 try
@@ -35,9 +30,9 @@ namespace FHTW.Swen1.Swamp.Network
                     if (json != null)
                     {
                         User.Create((string)json["username"]!,
-                                    (string)json["password"]!,
-                                    (string?)json["fullname"] ?? "",
-                                    (string?)json["email"] ?? "");
+                            (string)json["password"]!,
+                            (string?)json["fullname"] ?? "",
+                            (string?)json["email"] ?? "");
                         status = HttpStatusCode.OK;
                         reply = new JsonObject()
                         {
@@ -66,6 +61,7 @@ namespace FHTW.Swen1.Swamp.Network
                 e.Reply(status, reply?.ToJsonString());
                 return true;
             }
+            // Informationen über den eingeloggten Benutzer abrufen
             else if ((e.Path == "/users/me") && (e.Method == "GET"))
             {
                 (bool Success, User? User) ses = Token.Authenticate(e);
@@ -94,147 +90,171 @@ namespace FHTW.Swen1.Swamp.Network
                 e.Reply(status, reply?.ToJsonString());
                 return true;
             }
+            // Weitere Benutzer-bezogene Anfragen
             else if (e.Path.StartsWith("/users"))
             {
-                // Abrufen aller Benutzer
                 if (e.Method == "GET" && e.Path == "/users")
                 {
-                    (bool Success, User? User) ses = Token.Authenticate(e);
-
-                    if (ses.Success)
-                    {
-                        JsonArray usersArray = new JsonArray();
-                        foreach (var user in User.GetAllUsers())
-                        {
-                            usersArray.Add(new JsonObject()
-                            {
-                                ["username"] = user.UserName,
-                                ["fullname"] = user.FullName,
-                                ["email"] = user.EMail
-                            });
-                        }
-
-                        status = HttpStatusCode.OK;
-                        reply = new JsonObject()
-                        {
-                            ["success"] = true,
-                            ["users"] = usersArray
-                        };
-                    }
-                    else
-                    {
-                        status = HttpStatusCode.UNAUTHORIZED;
-                        reply = new JsonObject()
-                        {
-                            ["success"] = false,
-                            ["message"] = "Unauthorized."
-                        };
-                    }
-
-                    e.Reply(status, reply?.ToJsonString());
-                    return true;
+                    return HandleGetAllUsers(e);
                 }
-                // Abrufen eines bestimmten Benutzers
                 else if (e.Method == "GET" && e.Path.StartsWith("/users/"))
                 {
-                    string requestedUser = e.Path.Substring("/users/".Length);
-
-                    if (User.Exists(requestedUser))
-                    {
-                        User? user = User.Get(requestedUser);
-                        if (user != null)
-                        {
-                            status = HttpStatusCode.OK;
-                            reply = new JsonObject()
-                            {
-                                ["success"] = true,
-                                ["username"] = user.UserName,
-                                ["fullname"] = user.FullName,
-                                ["email"] = user.EMail
-                            };
-                        }
-                        else
-                        {
-                            status = HttpStatusCode.NOT_FOUND;
-                            reply = new JsonObject()
-                            {
-                                ["success"] = false,
-                                ["message"] = "User not found."
-                            };
-                        }
-                    }
-                    else
-                    {
-                        status = HttpStatusCode.NOT_FOUND;
-                        reply = new JsonObject()
-                        {
-                            ["success"] = false,
-                            ["message"] = "User not found."
-                        };
-                    }
-
-                    e.Reply(status, reply?.ToJsonString());
-                    return true;
+                    return HandleGetUser(e);
                 }
-                // Hinzufügen eines Kartenpakets zum Stack des Benutzers
                 else if (e.Method == "POST" && e.Path.EndsWith("/stack/add-package"))
                 {
-                    (bool Success, User? User) ses = Token.Authenticate(e);
-
-                    if (ses.Success)
-                    {
-                        ses.User!.AddPackage();
-                        status = HttpStatusCode.OK;
-                        reply = new JsonObject()
-                        {
-                            ["success"] = true,
-                            ["message"] = "Package added to user's stack."
-                        };
-                    }
-                    else
-                    {
-                        status = HttpStatusCode.UNAUTHORIZED;
-                        reply = new JsonObject()
-                        {
-                            ["success"] = false,
-                            ["message"] = "Unauthorized."
-                        };
-                    }
-
-                    e.Reply(status, reply?.ToJsonString());
-                    return true;
+                    return HandleAddPackage(e);
                 }
-                // Auswählen eines neuen Decks aus dem Stack
                 else if (e.Method == "POST" && e.Path.EndsWith("/deck/choose"))
                 {
-                    (bool Success, User? User) ses = Token.Authenticate(e);
-
-                    if (ses.Success)
-                    {
-                        ses.User!.ChooseDeck();
-                        status = HttpStatusCode.OK;
-                        reply = new JsonObject()
-                        {
-                            ["success"] = true,
-                            ["message"] = "Deck selected from user's stack."
-                        };
-                    }
-                    else
-                    {
-                        status = HttpStatusCode.UNAUTHORIZED;
-                        reply = new JsonObject()
-                        {
-                            ["success"] = false,
-                            ["message"] = "Unauthorized."
-                        };
-                    }
-
-                    e.Reply(status, reply?.ToJsonString());
-                    return true;
+                    return HandleChooseDeck(e);
                 }
             }
 
             return false;
+        }
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Private Methoden                                                                                                 //
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /// <summary>Handles retrieving all users.</summary>
+        private bool HandleGetAllUsers(HttpSvrEventArgs e)
+        {
+            JsonObject? reply = null;
+            int status = HttpStatusCode.UNAUTHORIZED;
+
+            (bool Success, User? User) ses = Token.Authenticate(e);
+
+            if (ses.Success)
+            {
+                JsonArray usersArray = new JsonArray();
+                foreach (var user in User.GetAllUsers())
+                {
+                    usersArray.Add(new JsonObject()
+                    {
+                        ["username"] = user.UserName,
+                        ["fullname"] = user.FullName,
+                        ["email"] = user.EMail
+                    });
+                }
+
+                status = HttpStatusCode.OK;
+                reply = new JsonObject()
+                {
+                    ["success"] = true,
+                    ["users"] = usersArray
+                };
+            }
+            else
+            {
+                reply = new JsonObject()
+                {
+                    ["success"] = false,
+                    ["message"] = "Unauthorized."
+                };
+            }
+
+            e.Reply(status, reply?.ToJsonString());
+            return true;
+        }
+
+        /// <summary>Handles retrieving a specific user.</summary>
+        private bool HandleGetUser(HttpSvrEventArgs e)
+        {
+            JsonObject? reply = null;
+            int status = HttpStatusCode.NOT_FOUND;
+
+            string requestedUser = e.Path.Substring("/users/".Length);
+
+            if (User.Exists(requestedUser))
+            {
+                User? user = User.Get(requestedUser);
+                if (user != null)
+                {
+                    status = HttpStatusCode.OK;
+                    reply = new JsonObject()
+                    {
+                        ["success"] = true,
+                        ["username"] = user.UserName,
+                        ["fullname"] = user.FullName,
+                        ["email"] = user.EMail
+                    };
+                }
+            }
+            else
+            {
+                reply = new JsonObject()
+                {
+                    ["success"] = false,
+                    ["message"] = "User not found."
+                };
+            }
+
+            e.Reply(status, reply?.ToJsonString());
+            return true;
+        }
+
+        /// <summary>Handles adding a package to the user's stack.</summary>
+        private bool HandleAddPackage(HttpSvrEventArgs e)
+        {
+            JsonObject? reply = null;
+            int status = HttpStatusCode.UNAUTHORIZED;
+
+            (bool Success, User? User) ses = Token.Authenticate(e);
+
+            if (ses.Success)
+            {
+                ses.User!.AddPackage();
+                status = HttpStatusCode.OK;
+                reply = new JsonObject()
+                {
+                    ["success"] = true,
+                    ["message"] = "Package added to user's stack."
+                };
+            }
+            else
+            {
+                reply = new JsonObject()
+                {
+                    ["success"] = false,
+                    ["message"] = "Unauthorized."
+                };
+            }
+
+            e.Reply(status, reply?.ToJsonString());
+            return true;
+        }
+
+        /// <summary>Handles selecting a new deck from the user's stack.</summary>
+        private bool HandleChooseDeck(HttpSvrEventArgs e)
+        {
+            JsonObject? reply = null;
+            int status = HttpStatusCode.UNAUTHORIZED;
+
+            (bool Success, User? User) ses = Token.Authenticate(e);
+
+            if (ses.Success)
+            {
+                ses.User!.ChooseDeck();
+                status = HttpStatusCode.OK;
+                reply = new JsonObject()
+                {
+                    ["success"] = true,
+                    ["message"] = "Deck selected from user's stack."
+                };
+            }
+            else
+            {
+                reply = new JsonObject()
+                {
+                    ["success"] = false,
+                    ["message"] = "Unauthorized."
+                };
+            }
+
+            e.Reply(status, reply?.ToJsonString());
+            return true;
         }
     }
 }

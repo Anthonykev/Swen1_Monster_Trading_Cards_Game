@@ -2,30 +2,15 @@
 using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Text;
-
+using System.Collections.Generic;
 
 //4)
 namespace FHTW.Swen1.Swamp.Network
 {
-    /// <summary>This class defines event arguments for the <see cref="HttpSvrEventHandler"/> event handler.</summary>
     public class HttpSvrEventArgs : EventArgs
     {
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // protected members                                                                                                //
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        /// <summary>TCP client.</summary>
         protected TcpClient _Client;
 
-
-
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // constructors                                                                                                     //
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        /// <summary>Creates a new instance of this class.</summary>
-        /// <param name="client">TCP client.</param>
-        /// <param name="plainMessage">Plain HTTP message.</param>
         public HttpSvrEventArgs(TcpClient client, string plainMessage)
         {
             _Client = client;
@@ -53,11 +38,18 @@ namespace FHTW.Swen1.Swamp.Network
                     {
                         inheaders = false;
                     }
-                    else { headers.Add(new(lines[i])); }
+                    else
+                    {
+                        headers.Add(new(lines[i]));
+                    }
                 }
                 else
                 {
-                    if (!string.IsNullOrWhiteSpace(Payload)) { Payload += "\r\n"; }
+                    if (!string.IsNullOrWhiteSpace(Payload))
+                    {
+                        Payload += "\r\n";
+                    }
+
                     Payload += lines[i];
                 }
             }
@@ -65,110 +57,68 @@ namespace FHTW.Swen1.Swamp.Network
             Headers = headers.ToArray();
         }
 
+        public string PlainMessage { get; protected set; } = string.Empty;
 
+        public virtual string Method { get; protected set; } = string.Empty;
 
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // public properties                                                                                                //
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        public virtual string Path { get; protected set; } = string.Empty;
 
-        /// <summary>Gets the plain message.</summary>
-        public string PlainMessage
+        public virtual HttpHeader[] Headers { get; protected set; } = Array.Empty<HttpHeader>();
+
+        public virtual string Payload { get; protected set; } = string.Empty;
+
+        public void Reply(int status, string? body = null, Dictionary<string, string>? headers = null)
         {
-            get; protected set;
-        } = string.Empty;
-
-
-        /// <summary>Gets the HTTP method.</summary>
-        public virtual string Method
-        {
-            get; protected set;
-        } = string.Empty;
-
-
-        /// <summary>Gets the HTTP path.</summary>
-        public virtual string Path
-        {
-            get; protected set;
-        } = string.Empty;
-
-
-        /// <summary>Gets the HTTP headers.</summary>
-        public virtual HttpHeader[] Headers
-        {
-            get; protected set;
-        } = Array.Empty<HttpHeader>();
-
-
-        /// <summary>Gets the payload.</summary>
-        public virtual string Payload
-        {
-            get; protected set;
-        } = string.Empty;
-
-
-
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // public methods                                                                                                   //
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        /// <summary>Replies the request</summary>
-        /// <param name="status">HTTP Status code.</param>
-        /// <param name="msg">Reply body.</param>
-       
-
-        public void Reply(int status, string? body = null)
-        {
-            // Prüfen, ob der Client null ist
-            if (_Client == null)
-            {
-                Console.WriteLine("No client available to send a response.");
-                return;
-            }
-
             string data;
 
-            // Statuscodes behandeln
             switch (status)
             {
                 case 200:
-                    data = "HTTP/1.1 200 OK\n"; break;
+                    data = "HTTP/1.1 200 OK\n";
+                    break;
                 case 400:
-                    data = "HTTP/1.1 400 Bad Request\n"; break;
+                    data = "HTTP/1.1 400 Bad Request\n";
+                    break;
                 case 401:
-                    data = "HTTP/1.1 401 Unauthorized\n"; break;
+                    data = "HTTP/1.1 401 Unauthorized\n";
+                    break;
                 case 404:
-                    data = "HTTP/1.1 404 Not Found\n"; break;
+                    data = "HTTP/1.1 404 Not Found\n";
+                    break;
                 default:
-                    data = $"HTTP/1.1 {status} Status unknown\n"; break;
+                    data = $"HTTP/1.1 {status} Status unknown\n";
+                    break;
             }
 
-            // Header und Body anfügen
+            if (headers != null)
+            {
+                foreach (var header in headers)
+                {
+                    data += $"{header.Key}: {header.Value}\n";
+                }
+            }
+
             if (string.IsNullOrEmpty(body))
             {
                 data += "Content-Length: 0\n";
             }
+
             data += "Content-Type: text/plain\n\n";
             if (!string.IsNullOrEmpty(body))
             {
                 data += body;
             }
 
-            // Antwort senden
             try
             {
                 byte[] buf = Encoding.ASCII.GetBytes(data);
-                using (var stream = _Client.GetStream()) // Sicherstellen, dass der Stream geschlossen wird
+                using (var stream = _Client.GetStream())
                 {
                     stream.Write(buf, 0, buf.Length);
                 }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error sending response: {ex.Message}");
-            }
             finally
             {
-                // Client schließen und freigeben
                 _Client.Close();
                 _Client.Dispose();
             }

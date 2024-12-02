@@ -43,11 +43,10 @@ namespace FHTW.Swen1.Swamp.Network
 
             for (int i = 0; i < 24; i++)
             {
-                rval += _ALPHABET[rnd.Next(0, 62)];
+                rval += _ALPHABET[rnd.Next(0, _ALPHABET.Length)];
             }
 
             _Tokens.Add(rval, user);
-
             return rval;
         }
 
@@ -71,7 +70,6 @@ namespace FHTW.Swen1.Swamp.Network
 
             return (false, null);
         }
-
 
         public static (bool Success, User? User) Authenticate(HttpSvrEventArgs e)
         {

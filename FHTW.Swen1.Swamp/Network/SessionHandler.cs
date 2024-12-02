@@ -2,21 +2,14 @@
 using FHTW.Swen1.Swamp.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Nodes;
-using System.Threading.Tasks;
 
 namespace FHTW.Swen1.Swamp.Network
 {
     public class SessionHandler : Handler, IHandler
     {
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // [override] Handler                                                                                               //
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        private static Dictionary<string, string> ActiveSessions = new();
 
-        /// <summary>Handles an incoming HTTP request.</summary>
-        /// <param name="e">Event arguments.</param>
         public override bool Handle(HttpSvrEventArgs e)
         {
             if ((e.Path.TrimEnd('/', ' ', '\t') == "/sessions") && (e.Method == "POST"))
@@ -29,10 +22,13 @@ namespace FHTW.Swen1.Swamp.Network
                     JsonNode? json = JsonNode.Parse(e.Payload);
                     if (json != null)
                     {
-                        (bool Success, string Token) result = User.Logon((string)json["username"]!, (string)json["password"]!);
+                        string username = (string)json["username"]!;
+                        string password = (string)json["password"]!;
+                        (bool Success, string Token) result = User.Logon(username, password);
 
                         if (result.Success)
                         {
+                            ActiveSessions[result.Token] = username;
                             status = HttpStatusCode.OK;
                             reply = new JsonObject()
                             {
@@ -40,6 +36,14 @@ namespace FHTW.Swen1.Swamp.Network
                                 ["message"] = "User logged in.",
                                 ["token"] = result.Token
                             };
+
+                            // Antwort mit Header und Token senden
+                            var headers = new Dictionary<string, string>
+                            {
+                                { "Authorization", $"Bearer {result.Token}" }
+                            };
+                            e.Reply(status, reply?.ToJsonString(), headers);
+                            return true;
                         }
                         else
                         {
@@ -67,6 +71,10 @@ namespace FHTW.Swen1.Swamp.Network
 
             return false;
         }
+
+        public static string? GetUsernameFromToken(string token)
+        {
+            return ActiveSessions.ContainsKey(token) ? ActiveSessions[token] : null;
+        }
     }
 }
-
