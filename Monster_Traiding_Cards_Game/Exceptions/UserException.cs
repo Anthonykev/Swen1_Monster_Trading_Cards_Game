@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FHTW.Swen1.Swamp.Exceptions
+namespace Monster_Trading_Cards_Game.Exceptions
 {
     /// <summary>This class represents a user-specific exception.</summary>
     public class UserException : Exception

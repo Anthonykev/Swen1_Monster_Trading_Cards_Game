@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FHTW.Swen1.Swamp.Models
+namespace Monster_Trading_Cards_Game.Models
 {
     public enum ElementType
     {

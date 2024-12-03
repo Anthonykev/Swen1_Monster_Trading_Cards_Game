@@ -1,11 +1,11 @@
-﻿using FHTW.Swen1.Swamp.Network;
+﻿using Monster_Trading_Cards_Game.Network;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FHTW.Swen1.Swamp.Interfaces
+namespace Monster_Trading_Cards_Game.Interfaces
 {
 
     /// <summary>Handlers that handle HTTP requests implement this interface.</summary>

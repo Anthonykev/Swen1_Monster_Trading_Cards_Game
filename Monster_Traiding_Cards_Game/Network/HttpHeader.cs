@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 //5)
 
-namespace FHTW.Swen1.Swamp.Network
+namespace Monster_Trading_Cards_Game.Network
 {
     public class HttpHeader  //Declares a class HttpHeader which represents a single HTTP header.
     {

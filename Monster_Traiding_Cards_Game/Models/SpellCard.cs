@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FHTW.Swen1.Swamp.Models
+namespace Monster_Trading_Cards_Game.Models
 {
      public class SpellCard : Card
     {

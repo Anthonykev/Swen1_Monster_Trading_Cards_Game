@@ -1,10 +1,10 @@
-﻿using FHTW.Swen1.Swamp.Interfaces;
-using FHTW.Swen1.Swamp.Models;
+﻿using Monster_Trading_Cards_Game.Interfaces;
+using Monster_Trading_Cards_Game.Models;
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Nodes;
 
-namespace FHTW.Swen1.Swamp.Network
+namespace Monster_Trading_Cards_Game.Network
 {
     public class SessionHandler : Handler, IHandler
     {

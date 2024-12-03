@@ -1,12 +1,12 @@
-﻿using FHTW.Swen1.Swamp.Models;
-using FHTW.Swen1.Swamp.Interfaces;
+﻿using Monster_Trading_Cards_Game.Models;
+using Monster_Trading_Cards_Game.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FHTW.Swen1.Swamp.Network
+namespace Monster_Trading_Cards_Game.Network
 {
     /// <summary>This class provides methods for the token-based security.</summary>
     public static class Token

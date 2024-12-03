@@ -1,11 +1,11 @@
-﻿using FHTW.Swen1.Swamp.Interfaces;
-using FHTW.Swen1.Swamp.Models;
-using FHTW.Swen1.Swamp.Exceptions;
-using FHTW.Swen1.Swamp.Network;
+﻿using Monster_Trading_Cards_Game.Interfaces;
+using Monster_Trading_Cards_Game.Models;
+using Monster_Trading_Cards_Game.Exceptions;
+using Monster_Trading_Cards_Game.Network;
 using System;
 using System.Text.Json.Nodes;
 
-namespace FHTW.Swen1.Swamp.Network
+namespace Monster_Trading_Cards_Game.Network
 {
     /// <summary>This class implements a handler for user-specific requests.</summary>
     public class UserHandler : Handler, IHandler

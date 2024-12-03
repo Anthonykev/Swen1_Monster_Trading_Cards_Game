@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FHTW.Swen1.Swamp.Network
+namespace Monster_Trading_Cards_Game.Network
 {
     /// <summary>This enumeration defines HTTP status codes that are used by
     ///          the <see cref="HttpSvr"/> implementation.</summary>

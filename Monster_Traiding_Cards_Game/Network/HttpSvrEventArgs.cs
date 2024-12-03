@@ -5,7 +5,7 @@ using System.Text;
 using System.Collections.Generic;
 
 //4)
-namespace FHTW.Swen1.Swamp.Network
+namespace Monster_Trading_Cards_Game.Network
 {
     public class HttpSvrEventArgs : EventArgs
     {

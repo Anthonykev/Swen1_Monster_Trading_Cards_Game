@@ -2,7 +2,7 @@
 
 //3)
 
-namespace FHTW.Swen1.Swamp.Network
+namespace Monster_Trading_Cards_Game.Network
 {
     /// <summary>This delegate is used for <see cref="HttpSvr"/> events.</summary>
     /// <param name="sender">Sending object.</param>

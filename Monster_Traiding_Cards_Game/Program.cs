@@ -1,11 +1,11 @@
 ﻿using System;
-using FHTW.Swen1.Swamp.Models;
-using FHTW.Swen1.Swamp.Network;
-using FHTW.Swen1.Swamp.Interfaces;
+using Monster_Trading_Cards_Game.Models;
+using Monster_Trading_Cards_Game.Network;
+using Monster_Trading_Cards_Game.Interfaces;
 
 
 
-namespace FHTW.Swen1.Swamp
+namespace Monster_Trading_Cards_Game
 {
     /// <summary>This class contains the main entry point of the application.</summary>
     internal class Program

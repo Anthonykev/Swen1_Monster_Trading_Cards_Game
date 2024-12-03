@@ -5,11 +5,11 @@ using System.Security.Authentication;
 using System.Security;
 using System.Text;
 using System.Threading.Tasks;
-using FHTW.Swen1.Swamp.Exceptions;
-using FHTW.Swen1.Swamp.Interfaces;
-using FHTW.Swen1.Swamp.Network;
+using Monster_Trading_Cards_Game.Exceptions;
+using Monster_Trading_Cards_Game.Interfaces;
+using Monster_Trading_Cards_Game.Network;
 
-namespace FHTW.Swen1.Swamp.Models
+namespace Monster_Trading_Cards_Game.Models
 {
     /// <summary>This class represents a user.</summary>
     public sealed class User

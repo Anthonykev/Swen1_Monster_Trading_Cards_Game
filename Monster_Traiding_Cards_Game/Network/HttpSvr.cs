@@ -1,10 +1,10 @@
-﻿using FHTW.Swen1.Swamp.Network;
+﻿using Monster_Trading_Cards_Game.Network;
 using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 
-namespace FHTW.Swen1.Swamp.Network
+namespace Monster_Trading_Cards_Game.Network
 {
     /// <summary>This class implements a HTTP server.</summary>
     public sealed class HttpSvr

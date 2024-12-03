@@ -1,4 +1,4 @@
-﻿using FHTW.Swen1.Swamp.Interfaces;
+﻿using Monster_Trading_Cards_Game.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FHTW.Swen1.Swamp.Network
+namespace Monster_Trading_Cards_Game.Network
 {
     /// <summary>This class provides an abstract implementation of the
     /// <see cref="IHandler"/> interface. It also implements static methods
