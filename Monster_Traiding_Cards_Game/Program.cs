@@ -33,7 +33,7 @@ namespace Monster_Trading_Cards_Game
             Database db = new Database(connectionString);
 
             // Tabelle erstellen
-            if (db.CreateTable())
+            if (db.CreateTables())
             {
                 Console.WriteLine("Tabelle 'Cards' wurde erstellt oder existiert bereits.");
             }
@@ -42,7 +42,7 @@ namespace Monster_Trading_Cards_Game
                 Console.WriteLine("Fehler beim Erstellen der Tabelle 'Cards'.");
             }
 
-            // Testkarte hinzufügen
+          /*  // Testkarte hinzufügen
             if (db.AddCard("Dragon", "Fire", 70))
             {
                 Console.WriteLine("Karte erfolgreich hinzugefügt.");
@@ -54,7 +54,7 @@ namespace Monster_Trading_Cards_Game
             {
                 Console.WriteLine($"Id: {card.Id}, Name: {card.Name}, Typ: {card.Type}, Schaden: {card.Damage}");
             }
-
+*/
 
 
 
