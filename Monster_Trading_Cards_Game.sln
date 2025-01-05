@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33103.184
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monster_Traiding_Cards", "FHTW.Swen1.Swamp\Monster_Traiding_Cards.csproj", "{DDA6AEBD-2D6D-4533-ABE6-F8A5E12E4697}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Monster_Traiding_Cards", "Monster_Traiding_Cards_Game\Monster_Traiding_Cards.csproj", "{DDA6AEBD-2D6D-4533-ABE6-F8A5E12E4697}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Projektmappenelemente", "Projektmappenelemente", "{EBDC9F10-AA37-4C03-8188-17CF2ADDBC25}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
