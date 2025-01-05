@@ -11,6 +11,7 @@ namespace Monster_Trading_Cards_Game.Models
 
     public abstract class Card
     {
+        public int Id { get; set; } // Eindeutige ID für die Karte
         public string Name { get; set; }
         public int Damage { get; private set; } // Schaden ist nun abhängig vom Typ und wird nicht verändert
         public ElementType CardElementType { get; private set; }
@@ -96,6 +97,8 @@ namespace Monster_Trading_Cards_Game.Models
             double totalDamage = Damage * effectiveness;
             return totalDamage;
         }
+
         public abstract void PlayCard();
     }
 }
+

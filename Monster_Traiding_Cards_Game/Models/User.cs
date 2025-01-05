@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Monster_Trading_Cards_Game.Exceptions;
 using Monster_Trading_Cards_Game.Interfaces;
 using Monster_Trading_Cards_Game.Network;
+using Npgsql;
 
 namespace Monster_Trading_Cards_Game.Models
 {
@@ -19,7 +20,6 @@ namespace Monster_Trading_Cards_Game.Models
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         /// <summary>Currently holds the system users.</summary>
-        /// <remarks>Is to be removed by database implementation later.</remarks>
         private static Dictionary<string, User> _Users = new();
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -82,7 +82,8 @@ namespace Monster_Trading_Cards_Game.Models
                 {
                     throw new SecurityException("Trying to change other user's data.");
                 }
-                // Save data.
+                // Save data to database
+                SaveToDatabase();
             }
             else
             {
@@ -106,11 +107,18 @@ namespace Monster_Trading_Cards_Game.Models
                 string cardName = CardNames[randNames.Next(CardNames.Count)];
                 Stack.Add(CreateCard(cardName));
             }
+
+            // Save changes to database
+            SaveToDatabase();
         }
 
         /// <summary>Selects the best cards from the stack to add them to the deck.</summary>
         public void ChooseDeck()
         {
+            // Clear the current deck in the database
+            ClearDeckInDatabase();
+
+            // Select the best cards from the stack
             var sortedStack = Stack
                 .OrderByDescending(card => card.Damage)
                 .ThenBy(card => card.CardElementType == ElementType.Water ? 1 :
@@ -118,8 +126,19 @@ namespace Monster_Trading_Cards_Game.Models
                 .ThenByDescending(card => card.GetType().Name) // Optional: prioritize card type
                 .ToList();
 
-            Deck.Clear();
+            // Add the selected cards to the deck
             Deck = sortedStack.Take(4).ToList();
+
+            // Save changes to database
+            SaveToDatabase();
+        }
+
+        /// <summary>Returns all cards from the deck to the stack.</summary>
+        public void ReturnDeckToStack()
+        {
+            Stack.AddRange(Deck);
+            Deck.Clear();
+            SaveToDatabase();
         }
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -145,6 +164,64 @@ namespace Monster_Trading_Cards_Game.Models
             }
         }
 
+        /// <summary>Clears the user's deck in the database.</summary>
+        private void ClearDeckInDatabase()
+        {
+            using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
+            {
+                connection.Open();
+                var command = new NpgsqlCommand(@"
+                    DELETE FROM UserDecks
+                    WHERE UserId = (SELECT Id FROM Users WHERE UserName = @username)", connection);
+                command.Parameters.AddWithValue("@username", UserName);
+                command.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>Saves the user data to the database.</summary>
+        private void SaveToDatabase()
+        {
+            using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
+            {
+                connection.Open();
+                var command = new NpgsqlCommand(@"
+                    INSERT INTO Users (UserName, FullName, EMail, Coins, SessionToken)
+                    VALUES (@username, @fullname, @email, @coins, @sessiontoken)
+                    ON CONFLICT (UserName) DO UPDATE
+                    SET FullName = @fullname, EMail = @email, Coins = @coins, SessionToken = @sessiontoken", connection);
+                command.Parameters.AddWithValue("@username", UserName);
+                command.Parameters.AddWithValue("@fullname", FullName);
+                command.Parameters.AddWithValue("@email", EMail);
+                command.Parameters.AddWithValue("@coins", Coins);
+                command.Parameters.AddWithValue("@sessiontoken", SessionToken ?? (object)DBNull.Value);
+                command.ExecuteNonQuery();
+
+                // Save the user's stack to the database
+                foreach (var card in Stack)
+                {
+                    var cardCommand = new NpgsqlCommand(@"
+                        INSERT INTO UserStacks (UserId, CardId)
+                        VALUES ((SELECT Id FROM Users WHERE UserName = @username), @cardid)
+                        ON CONFLICT (UserId, CardId) DO NOTHING", connection);
+                    cardCommand.Parameters.AddWithValue("@username", UserName);
+                    cardCommand.Parameters.AddWithValue("@cardid", card.Id);
+                    cardCommand.ExecuteNonQuery();
+                }
+
+                // Save the user's deck to the database
+                foreach (var card in Deck)
+                {
+                    var cardCommand = new NpgsqlCommand(@"
+                        INSERT INTO UserDecks (UserId, CardId)
+                        VALUES ((SELECT Id FROM Users WHERE UserName = @username), @cardid)
+                        ON CONFLICT (UserId, CardId) DO NOTHING", connection);
+                    cardCommand.Parameters.AddWithValue("@username", UserName);
+                    cardCommand.Parameters.AddWithValue("@cardid", card.Id);
+                    cardCommand.ExecuteNonQuery();
+                }
+            }
+        }
+
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // public static methods                                                                                            //
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -165,6 +242,9 @@ namespace Monster_Trading_Cards_Game.Models
             };
 
             _Users.Add(user.UserName, user);
+
+            // Save user to database
+            user.SaveToDatabase();
         }
 
         /// <summary>Performs a user logon.</summary>
@@ -174,6 +254,7 @@ namespace Monster_Trading_Cards_Game.Models
             {
                 string token = Token._CreateTokenFor(_Users[userName]);
                 _Users[userName].SessionToken = token;
+                _Users[userName].SaveToDatabase();
                 return (true, token);
             }
 
@@ -200,3 +281,4 @@ namespace Monster_Trading_Cards_Game.Models
         }
     }
 }
+

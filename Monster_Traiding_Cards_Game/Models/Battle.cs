@@ -18,46 +18,49 @@ namespace Monster_Trading_Cards_Game.Models
         /// <summary>Initializes a new instance of the <see cref="Battle"/> class.</summary>
         /// <param name="player1">The first player.</param>
         /// <param name="player2">The second player.</param>
+        /// <exception cref="ArgumentNullException">Thrown when any of the players is null.</exception>
         public Battle(User player1, User player2)
         {
-            Player1 = player1;
-            Player2 = player2;
+            Player1 = player1 ?? throw new ArgumentNullException(nameof(player1), "Player1 cannot be null");
+            Player2 = player2 ?? throw new ArgumentNullException(nameof(player2), "Player2 cannot be null");
             Rounds = new List<Round>();
         }
 
         /// <summary>Starts the battle between the two players.</summary>
+        /// <exception cref="InvalidOperationException">Thrown when any player has an empty deck.</exception>
         public void Start()
         {
+            if (Player1.Deck == null || Player1.Deck.Count == 0)
+            {
+                throw new InvalidOperationException($"{Player1.UserName} has no cards in their deck.");
+            }
+
+            if (Player2.Deck == null || Player2.Deck.Count == 0)
+            {
+                throw new InvalidOperationException($"{Player2.UserName} has no cards in their deck.");
+            }
+
             Console.WriteLine($"Battle started between {Player1.UserName} and {Player2.UserName}!");
 
-            int player1Wins = 0;
-            int player2Wins = 0;
-
-            // Example: Conduct 3 rounds
-            for (int i = 0; i < 3; i++)
+            while (Player1.Deck.Count > 0 && Player2.Deck.Count > 0)
             {
-                Console.WriteLine($"Starting Round {i + 1}...");
                 Round round = new Round(Player1, Player2);
                 round.Play();
                 Rounds.Add(round);
 
-                if (round.Winner == Player1)
+                if (Player1.Deck.Count == 0 || Player2.Deck.Count == 0)
                 {
-                    player1Wins++;
-                }
-                else if (round.Winner == Player2)
-                {
-                    player2Wins++;
+                    break;
                 }
             }
 
             // Determine the overall winner
-            if (player1Wins > player2Wins)
+            if (Player1.Deck.Count > 0)
             {
                 Winner = Player1;
                 Console.WriteLine($"The winner of the battle is: {Player1.UserName}");
             }
-            else if (player2Wins > player1Wins)
+            else if (Player2.Deck.Count > 0)
             {
                 Winner = Player2;
                 Console.WriteLine($"The winner of the battle is: {Player2.UserName}");
@@ -66,6 +69,12 @@ namespace Monster_Trading_Cards_Game.Models
             {
                 Winner = null;
                 Console.WriteLine("The battle ended in a draw!");
+            }
+
+            // Return the winner's deck to the stack
+            if (Winner != null)
+            {
+                Winner.ReturnDeckToStack();
             }
         }
     }

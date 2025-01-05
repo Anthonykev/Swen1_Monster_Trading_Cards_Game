@@ -36,11 +36,13 @@ namespace Monster_Trading_Cards_Game.Models
             {
                 Winner = Player1;
                 Console.WriteLine($"Round winner: {Player1.UserName}");
+                TransferCard(Player2, Player1);
             }
             else if (player2TotalDamage > player1TotalDamage)
             {
                 Winner = Player2;
                 Console.WriteLine($"Round winner: {Player2.UserName}");
+                TransferCard(Player1, Player2);
             }
             else
             {
@@ -48,5 +50,17 @@ namespace Monster_Trading_Cards_Game.Models
                 Console.WriteLine("The round ended in a draw.");
             }
         }
+
+        /// <summary>Transfers a card from the loser to the winner.</summary>
+        private void TransferCard(User loser, User winner)
+        {
+            if (loser.Deck.Count > 0)
+            {
+                var card = loser.Deck.First();
+                loser.Deck.Remove(card);
+                winner.Deck.Add(card);
+            }
+        }
     }
 }
+
