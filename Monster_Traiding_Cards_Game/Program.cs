@@ -52,25 +52,25 @@ namespace Monster_Trading_Cards_Game
 
             // Test Registrierung
             Console.WriteLine("Test Registrierung:");
-            bool registrationSuccess1 = db.RegisterUser("max", "password123", "Test User", "max@example.com");
-            bool registrationSuccess2 = db.RegisterUser("max2", "password123", "Test User 2", "max2@example.com");
-            Console.WriteLine(registrationSuccess1 ? "Registrierung von max erfolgreich" : "Registrierung von max fehlgeschlagen");
-            Console.WriteLine(registrationSuccess2 ? "Registrierung von max2 erfolgreich" : "Registrierung von max2 fehlgeschlagen");
+            bool registrationSuccess1 = db.RegisterUser("tirsit", "password123", "Test User", "tirsit@example.com");
+            bool registrationSuccess2 = db.RegisterUser("tirsit2", "password123", "Test User 2", "tirsit2@example.com");
+            Console.WriteLine(registrationSuccess1 ? "Registrierung von tirsit erfolgreich" : "Registrierung von tirsit fehlgeschlagen");
+            Console.WriteLine(registrationSuccess2 ? "Registrierung von tirsit2 erfolgreich" : "Registrierung von tirsit2 fehlgeschlagen");
 
             // Test Anmeldung
             Console.WriteLine("Test Anmeldung:");
-            var (loginSuccess1, token1) = db.AuthenticateUser("max", "password123");
-            var (loginSuccess2, token2) = db.AuthenticateUser("max2", "password123");
-            Console.WriteLine(loginSuccess1 ? $"Anmeldung von max erfolgreich, Token: {token1}" : "Anmeldung von max fehlgeschlagen");
-            Console.WriteLine(loginSuccess2 ? $"Anmeldung von max2 erfolgreich, Token: {token2}" : "Anmeldung von max2 fehlgeschlagen");
+            var (loginSuccess1, token1) = db.AuthenticateUser("tirsit", "password123");
+            var (loginSuccess2, token2) = db.AuthenticateUser("tirsit2", "password123");
+            Console.WriteLine(loginSuccess1 ? $"Anmeldung von tirsit erfolgreich, Token: {token1}" : "Anmeldung von tirsit fehlgeschlagen");
+            Console.WriteLine(loginSuccess2 ? $"Anmeldung von tirsit2 erfolgreich, Token: {token2}" : "Anmeldung von tirsit2 fehlgeschlagen");
 
             // Test Kartenverwaltung
             if (loginSuccess1 && loginSuccess2)
             {
-                User? user1 = User.Get("max");
-                User? user2 = User.Get("max2");
-                Console.WriteLine(user1 != null ? $"Benutzer max gefunden: {user1.UserName}" : "Benutzer max nicht gefunden");
-                Console.WriteLine(user2 != null ? $"Benutzer max2 gefunden: {user2.UserName}" : "Benutzer max2 nicht gefunden");
+                User? user1 = User.Get("tirsit");
+                User? user2 = User.Get("tirsit2");
+                Console.WriteLine(user1 != null ? $"Benutzer tirsit gefunden: {user1.UserName}" : "Benutzer tirsit nicht gefunden");
+                Console.WriteLine(user2 != null ? $"Benutzer tirsit2 gefunden: {user2.UserName}" : "Benutzer tirsit2 nicht gefunden");
 
                 if (user1 != null && user2 != null)
                 {

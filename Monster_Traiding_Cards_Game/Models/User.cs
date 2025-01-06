@@ -62,13 +62,6 @@ namespace Monster_Trading_Cards_Game.Models
         // private members                                                                                                  //
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        /// <summary>Available card names for random card creation.</summary>
-        private List<string> CardNames = new()
-        {
-            "Goblins", "Dragons", "Wizzard", "Knights", "Orks", "Kraken", "FireElves", "Lion", "DogMike", "Rocklee",
-            "Tetsu", "Amaterasu", "Bankai", "Raijin", "Susanoo", "FighterKevin"
-        };
-
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // public methods                                                                                                   //
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -105,10 +98,11 @@ namespace Monster_Trading_Cards_Game.Models
 
             Coins -= 5;
             Random randNames = new();
+            List<string> cardNames = GetCardNamesFromDatabase();
 
             for (int i = 0; i < 5; i++)
             {
-                string cardName = CardNames[randNames.Next(CardNames.Count)];
+                string cardName = cardNames[randNames.Next(cardNames.Count)];
                 Stack.Add(CreateCard(cardName));
             }
 
@@ -187,7 +181,25 @@ namespace Monster_Trading_Cards_Game.Models
             throw new Exception("Card not found in database");
         }
 
-
+        /// <summary>Gets the available card names from the database.</summary>
+        /// <returns>A list of card names.</returns>
+        private List<string> GetCardNamesFromDatabase()
+        {
+            List<string> cardNames = new();
+            using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
+            {
+                connection.Open();
+                var command = new NpgsqlCommand("SELECT Name FROM Cards", connection);
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        cardNames.Add(reader.GetString(0));
+                    }
+                }
+            }
+            return cardNames;
+        }
 
         /// <summary>Clears the user's deck in the database.</summary>
         private void ClearDeckInDatabase()
@@ -318,7 +330,6 @@ namespace Monster_Trading_Cards_Game.Models
             }
             return null;
         }
-
 
         public static IEnumerable<User> GetAllUsers()
         {
