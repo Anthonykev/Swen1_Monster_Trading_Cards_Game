@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Authentication;
 using System.Security;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Monster_Trading_Cards_Game.Exceptions;
@@ -44,6 +45,9 @@ namespace Monster_Trading_Cards_Game.Models
 
         /// <summary>Gets or sets the user's coins.</summary>
         public int Coins { get; set; } = 20;
+
+        /// <summary>Gets or sets the user's password.</summary>
+        public string Password { get; private set; } = string.Empty;
 
         /// <summary>Holds the user's card stack.</summary>
         public List<Card> Stack { get; set; } = new();
@@ -185,12 +189,13 @@ namespace Monster_Trading_Cards_Game.Models
             {
                 connection.Open();
                 var command = new NpgsqlCommand(@"
-                    INSERT INTO Users (UserName, FullName, EMail, Coins, SessionToken)
-                    VALUES (@username, @fullname, @email, @coins, @sessiontoken)
+                    INSERT INTO Users (UserName, FullName, EMail, Coins, Password, SessionToken)
+                    VALUES (@username, @fullname, @email, @coins, @password, @sessiontoken)
                     ON CONFLICT (UserName) DO UPDATE
-                    SET FullName = @fullname, EMail = @email, Coins = @coins, SessionToken = @sessiontoken", connection);
+                    SET FullName = @fullname, EMail = @email, Coins = @coins, Password = @password, SessionToken = @sessiontoken", connection);
                 command.Parameters.AddWithValue("@username", UserName);
                 command.Parameters.AddWithValue("@fullname", FullName);
+                command.Parameters.AddWithValue("@password", Password); // In einer echten Anwendung sollten Sie das Passwort hashen
                 command.Parameters.AddWithValue("@email", EMail);
                 command.Parameters.AddWithValue("@coins", Coins);
                 command.Parameters.AddWithValue("@sessiontoken", SessionToken ?? (object)DBNull.Value);
@@ -237,6 +242,7 @@ namespace Monster_Trading_Cards_Game.Models
             User user = new()
             {
                 UserName = userName,
+                Password = HashPassword(password), // Passwort hashen
                 FullName = fullName,
                 EMail = eMail
             };
@@ -250,7 +256,7 @@ namespace Monster_Trading_Cards_Game.Models
         /// <summary>Performs a user logon.</summary>
         public static (bool Success, string Token) Logon(string userName, string password)
         {
-            if (_Users.ContainsKey(userName))
+            if (_Users.ContainsKey(userName) && VerifyPassword(password, _Users[userName].Password)) // Passwort verifizieren
             {
                 string token = Token._CreateTokenFor(_Users[userName]);
                 _Users[userName].SessionToken = token;
@@ -268,17 +274,60 @@ namespace Monster_Trading_Cards_Game.Models
 
         public static User? Get(string userName)
         {
-            if (_Users.TryGetValue(userName, out User? user))
+            using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
             {
-                return user;
+                connection.Open();
+                var command = new NpgsqlCommand("SELECT Username, FullName, EMail, Coins, Password, SessionToken FROM Users WHERE Username = @username", connection);
+                command.Parameters.AddWithValue("@username", userName);
+                using (var reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        return new User
+                        {
+                            UserName = reader.GetString(0),
+                            FullName = reader.GetString(1),
+                            EMail = reader.GetString(2),
+                            Coins = reader.GetInt32(3),
+                            Password = reader.GetString(4),
+                            SessionToken = reader.IsDBNull(5) ? null : reader.GetString(5)
+                        };
+                    }
+                }
             }
             return null;
         }
+
 
         public static IEnumerable<User> GetAllUsers()
         {
             return _Users.Values;
         }
+
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // private static methods                                                                                           //
+        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /// <summary>Hashes a password using SHA256.</summary>
+        /// <param name="password">The password to hash.</param>
+        /// <returns>The hashed password.</returns>
+        private static string HashPassword(string password)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return Convert.ToBase64String(hashedBytes);
+            }
+        }
+
+        /// <summary>Verifies a password against a hashed password.</summary>
+        /// <param name="password">The password to verify.</param>
+        /// <param name="hashedPassword">The hashed password.</param>
+        /// <returns>True if the password matches the hashed password, otherwise false.</returns>
+        private static bool VerifyPassword(string password, string hashedPassword)
+        {
+            var hashOfInput = HashPassword(password);
+            return hashOfInput == hashedPassword;
+        }
     }
 }
-

@@ -42,23 +42,26 @@ namespace Monster_Trading_Cards_Game
 
             // Test Registrierung
             Console.WriteLine("Test Registrierung:");
-            bool registrationSuccess1 = db.RegisterUser("testuser", "password123", "Test User", "testuser@example.com");
-            bool registrationSuccess2 = db.RegisterUser("testuser2", "password123", "Test User 2", "testuser2@example.com");
-            Console.WriteLine(registrationSuccess1 ? "Registrierung von testuser erfolgreich" : "Registrierung von testuser fehlgeschlagen");
-            Console.WriteLine(registrationSuccess2 ? "Registrierung von testuser2 erfolgreich" : "Registrierung von testuser2 fehlgeschlagen");
+            bool registrationSuccess1 = db.RegisterUser("kodzoo", "password123", "Test User", "kodzoo@example.com");
+            bool registrationSuccess2 = db.RegisterUser("kodzoo2", "password123", "Test User 2", "kodzoo2@example.com");
+            Console.WriteLine(registrationSuccess1 ? "Registrierung von kodzoo erfolgreich" : "Registrierung von kodzoo fehlgeschlagen");
+            Console.WriteLine(registrationSuccess2 ? "Registrierung von kodzoo2 erfolgreich" : "Registrierung von kodzoo2 fehlgeschlagen");
 
             // Test Anmeldung
             Console.WriteLine("Test Anmeldung:");
-            var (loginSuccess1, token1) = db.AuthenticateUser("testuser", "password123");
-            var (loginSuccess2, token2) = db.AuthenticateUser("testuser2", "password123");
-            Console.WriteLine(loginSuccess1 ? $"Anmeldung von testuser erfolgreich, Token: {token1}" : "Anmeldung von testuser fehlgeschlagen");
-            Console.WriteLine(loginSuccess2 ? $"Anmeldung von testuser2 erfolgreich, Token: {token2}" : "Anmeldung von testuser2 fehlgeschlagen");
+            var (loginSuccess1, token1) = db.AuthenticateUser("kodzoo", "password123");
+            var (loginSuccess2, token2) = db.AuthenticateUser("kodzoo2", "password123");
+            Console.WriteLine(loginSuccess1 ? $"Anmeldung von kodzoo erfolgreich, Token: {token1}" : "Anmeldung von kodzoo fehlgeschlagen");
+            Console.WriteLine(loginSuccess2 ? $"Anmeldung von kodzoo2 erfolgreich, Token: {token2}" : "Anmeldung von kodzoo2 fehlgeschlagen");
 
             // Test Kartenverwaltung
             if (loginSuccess1 && loginSuccess2)
             {
-                User? user1 = User.Get("testuser");
-                User? user2 = User.Get("testuser2");
+                User? user1 = User.Get("kodzoo");
+                User? user2 = User.Get("kodzoo2");
+                Console.WriteLine(user1 != null ? $"Benutzer kodzoo gefunden: {user1.UserName}" : "Benutzer kodzoo nicht gefunden");
+                Console.WriteLine(user2 != null ? $"Benutzer kodzoo2 gefunden: {user2.UserName}" : "Benutzer kodzoo2 nicht gefunden");
+
                 if (user1 != null && user2 != null)
                 {
                     Console.WriteLine("Test Kartenverwaltung:");
@@ -76,17 +79,15 @@ namespace Monster_Trading_Cards_Game
                         Console.WriteLine("Einer der Benutzer hat keine Karten im Deck. Kampf kann nicht gestartet werden.");
                         return;
                     }
-                }
 
-                // Test Kämpfe
-                Console.WriteLine("Test Kämpfe:");
-                if (user1 != null && user2 != null)
-                {
+                    // Test Kämpfe
+                    Console.WriteLine("Test Kämpfe:");
                     Battle battle = new Battle(user1, user2);
                     battle.Start();
                     Console.WriteLine(battle.Winner != null ? $"Gewinner: {battle.Winner.UserName}" : "Unentschieden");
                 }
             }
+
 
             HttpSvr svr = new(); // neue scheibweise. System erkennt automatisch was Sache ist.
             svr.Incoming += Svr_Incoming; //(sender, e) => { Handler.HandleEvent(e); };
