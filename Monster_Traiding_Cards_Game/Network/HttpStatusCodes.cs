@@ -21,5 +21,7 @@ namespace Monster_Trading_Cards_Game.Network
 
         /// <summary>Status code NOT FOUND.</summary>
         public const int NOT_FOUND = 404;
+
+        public const int INTERNAL_SERVER_ERROR = 500;
     }
 }

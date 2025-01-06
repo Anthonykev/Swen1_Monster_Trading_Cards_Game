@@ -4,6 +4,7 @@ using Monster_Trading_Cards_Game.Exceptions;
 using Monster_Trading_Cards_Game.Network;
 using System;
 using System.Text.Json.Nodes;
+using Monster_Traiding_Cards.Database;
 
 namespace Monster_Trading_Cards_Game.Network
 {
@@ -21,33 +22,75 @@ namespace Monster_Trading_Cards_Game.Network
             JsonObject? reply = null;
             int status = HttpStatusCode.BAD_REQUEST;
 
-            // Benutzer erstellen
-            if ((e.Path.TrimEnd('/', ' ', '\t') == "/users") && (e.Method == "POST"))
+            // Tabellen erstellen
+            if ((e.Path.TrimEnd('/', ' ', '\t') == "/create-tables") && (e.Method == "POST"))
+            {
+                Database db = new Database("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+                if (db.CreateTables())
+                {
+                    status = HttpStatusCode.OK;
+                    reply = new JsonObject()
+                    {
+                        ["success"] = true,
+                        ["message"] = "Tabellen wurden erstellt oder existieren bereits."
+                    };
+                }
+                else
+                {
+                    status = HttpStatusCode.INTERNAL_SERVER_ERROR;
+                    reply = new JsonObject()
+                    {
+                        ["success"] = false,
+                        ["message"] = "Fehler beim Erstellen der Tabellen."
+                    };
+                }
+
+                e.Reply(status, reply?.ToJsonString());
+                return true;
+            }
+            // Standardkarten zur Datenbank hinzufügen
+            else if ((e.Path.TrimEnd('/', ' ', '\t') == "/add-default-cards") && (e.Method == "POST"))
+            {
+                Database db = new Database("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+                if (db.AddDefaultCards())
+                {
+                    status = HttpStatusCode.OK;
+                    reply = new JsonObject()
+                    {
+                        ["success"] = true,
+                        ["message"] = "Standardkarten wurden hinzugefügt."
+                    };
+                }
+                else
+                {
+                    status = HttpStatusCode.INTERNAL_SERVER_ERROR;
+                    reply = new JsonObject()
+                    {
+                        ["success"] = false,
+                        ["message"] = "Fehler beim Hinzufügen der Standardkarten."
+                    };
+                }
+
+                e.Reply(status, reply?.ToJsonString());
+                return true;
+            }
+            // Benutzer registrieren
+            else if ((e.Path.TrimEnd('/', ' ', '\t') == "/register") && (e.Method == "POST"))
             {
                 try
                 {
                     JsonNode? json = JsonNode.Parse(e.Payload);
                     if (json != null)
                     {
-                        User.Create((string)json["username"]!,
-                            (string)json["password"]!,
-                            (string?)json["fullname"] ?? "",
-                            (string?)json["email"] ?? "");
-                        status = HttpStatusCode.OK;
+                        Database db = new Database("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+                        bool success = db.RegisterUser((string)json["username"]!, (string)json["password"]!, (string)json["fullname"]!, (string)json["email"]!);
+                        status = success ? HttpStatusCode.OK : HttpStatusCode.BAD_REQUEST;
                         reply = new JsonObject()
                         {
-                            ["success"] = true,
-                            ["message"] = "User created."
+                            ["success"] = success,
+                            ["message"] = success ? "Registrierung erfolgreich." : "Registrierung fehlgeschlagen."
                         };
                     }
-                }
-                catch (UserException ex)
-                {
-                    reply = new JsonObject()
-                    {
-                        ["success"] = false,
-                        ["message"] = ex.Message
-                    };
                 }
                 catch (Exception)
                 {
@@ -61,29 +104,31 @@ namespace Monster_Trading_Cards_Game.Network
                 e.Reply(status, reply?.ToJsonString());
                 return true;
             }
-            // Informationen über den eingeloggten Benutzer abrufen
-            else if ((e.Path == "/users/me") && (e.Method == "GET"))
+            // Benutzer authentifizieren
+            else if ((e.Path.TrimEnd('/', ' ', '\t') == "/login") && (e.Method == "POST"))
             {
-                (bool Success, User? User) ses = Token.Authenticate(e);
-
-                if (ses.Success)
+                try
                 {
-                    status = HttpStatusCode.OK;
-                    reply = new JsonObject()
+                    JsonNode? json = JsonNode.Parse(e.Payload);
+                    if (json != null)
                     {
-                        ["success"] = true,
-                        ["username"] = ses.User!.UserName,
-                        ["fullname"] = ses.User!.FullName,
-                        ["email"] = ses.User!.EMail
-                    };
+                        Database db = new Database("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+                        var (success, token) = db.AuthenticateUser((string)json["username"]!, (string)json["password"]!);
+                        status = success ? HttpStatusCode.OK : HttpStatusCode.UNAUTHORIZED;
+                        reply = new JsonObject()
+                        {
+                            ["success"] = success,
+                            ["token"] = token,
+                            ["message"] = success ? "Anmeldung erfolgreich." : "Anmeldung fehlgeschlagen."
+                        };
+                    }
                 }
-                else
+                catch (Exception)
                 {
-                    status = HttpStatusCode.UNAUTHORIZED;
                     reply = new JsonObject()
                     {
                         ["success"] = false,
-                        ["message"] = "Unauthorized."
+                        ["message"] = "Invalid request."
                     };
                 }
 

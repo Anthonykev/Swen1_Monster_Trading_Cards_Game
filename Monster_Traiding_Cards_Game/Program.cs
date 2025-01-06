@@ -24,86 +24,11 @@ namespace Monster_Trading_Cards_Game
         /// <param name="args">Command line arguments.</param>
         static void Main(string[] args)
         {
-            // Verbindungszeichenfolge anpassen
-            string connectionString = "Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards";
-
-            // Datenbank-Objekt erstellen
-            Database db = new Database(connectionString);
-
-            // Tabelle erstellen
-            if (db.CreateTables())
-            {
-                Console.WriteLine("Tabellen wurden erstellt oder existieren bereits.");
-            }
-            else
-            {
-                Console.WriteLine("Fehler beim Erstellen der Tabellen.");
-            }
-
-            // Standardkarten zur Datenbank hinzufügen
-            if (db.AddDefaultCards())
-            {
-                Console.WriteLine("Standardkarten wurden hinzugefügt.");
-            }
-            else
-            {
-                Console.WriteLine("Fehler beim Hinzufügen der Standardkarten.");
-            }
-
-            // Test Registrierung
-            Console.WriteLine("Test Registrierung:");
-            bool registrationSuccess1 = db.RegisterUser("tirsit", "password123", "Test User", "tirsit@example.com");
-            bool registrationSuccess2 = db.RegisterUser("tirsit2", "password123", "Test User 2", "tirsit2@example.com");
-            Console.WriteLine(registrationSuccess1 ? "Registrierung von tirsit erfolgreich" : "Registrierung von tirsit fehlgeschlagen");
-            Console.WriteLine(registrationSuccess2 ? "Registrierung von tirsit2 erfolgreich" : "Registrierung von tirsit2 fehlgeschlagen");
-
-            // Test Anmeldung
-            Console.WriteLine("Test Anmeldung:");
-            var (loginSuccess1, token1) = db.AuthenticateUser("tirsit", "password123");
-            var (loginSuccess2, token2) = db.AuthenticateUser("tirsit2", "password123");
-            Console.WriteLine(loginSuccess1 ? $"Anmeldung von tirsit erfolgreich, Token: {token1}" : "Anmeldung von tirsit fehlgeschlagen");
-            Console.WriteLine(loginSuccess2 ? $"Anmeldung von tirsit2 erfolgreich, Token: {token2}" : "Anmeldung von tirsit2 fehlgeschlagen");
-
-            // Test Kartenverwaltung
-            if (loginSuccess1 && loginSuccess2)
-            {
-                User? user1 = User.Get("tirsit");
-                User? user2 = User.Get("tirsit2");
-                Console.WriteLine(user1 != null ? $"Benutzer tirsit gefunden: {user1.UserName}" : "Benutzer tirsit nicht gefunden");
-                Console.WriteLine(user2 != null ? $"Benutzer tirsit2 gefunden: {user2.UserName}" : "Benutzer tirsit2 nicht gefunden");
-
-                if (user1 != null && user2 != null)
-                {
-                    Console.WriteLine("Test Kartenverwaltung:");
-                    user1.AddPackage();
-                    user2.AddPackage();
-                    Console.WriteLine("Pakete hinzugefügt");
-
-                    user1.ChooseDeck();
-                    user2.ChooseDeck();
-                    Console.WriteLine("Decks ausgewählt");
-
-                    // Überprüfen, ob die Decks Karten enthalten
-                    if (user1.Deck.Count == 0 || user2.Deck.Count == 0)
-                    {
-                        Console.WriteLine("Einer der Benutzer hat keine Karten im Deck. Kampf kann nicht gestartet werden.");
-                        return;
-                    }
-
-                    // Test Kämpfe
-                    Console.WriteLine("Test Kämpfe:");
-                    Battle battle = new Battle(user1, user2);
-                    battle.Start();
-                    Console.WriteLine(battle.Winner != null ? $"Gewinner: {battle.Winner.UserName}" : "Unentschieden");
-                }
-            }
-
-
-            HttpSvr svr = new(); // neue scheibweise. System erkennt automatisch was Sache ist.
-            svr.Incoming += Svr_Incoming; //(sender, e) => { Handler.HandleEvent(e); };
+            HttpSvr svr = new();
+            svr.Incoming += Svr_Incoming;
 
             svr.Run();
-            Console.WriteLine("Server läuft auf http://127.0.0.1:12000\"");
+            Console.WriteLine("Server läuft auf http://127.0.0.1:12000");
         }
 
         private static void Svr_Incoming(object sender, HttpSvrEventArgs e)
