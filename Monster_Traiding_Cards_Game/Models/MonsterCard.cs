@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Monster_Trading_Cards_Game.Models
 {
-    public class MonsterCard: Card
+    public class MonsterCard : Card
     {
-        public MonsterCard(string name) : base(name)
+        public MonsterCard(int id, string name, int damage, ElementType elementType)
+            : base(id, name, damage, elementType)
         {
         }
 
@@ -18,3 +20,5 @@ namespace Monster_Trading_Cards_Game.Models
         }
     }
 }
+
+

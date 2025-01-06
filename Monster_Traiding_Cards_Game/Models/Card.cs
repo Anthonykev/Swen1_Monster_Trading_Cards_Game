@@ -16,62 +16,12 @@ namespace Monster_Trading_Cards_Game.Models
         public int Damage { get; private set; } // Schaden ist nun abhängig vom Typ und wird nicht verändert
         public ElementType CardElementType { get; private set; }
 
-        public Card(string name)
+        public Card(int id, string name, int damage, ElementType elementType)
         {
+            Id = id;
             Name = name;
-            CardElementType = AssignElementType(name); // Elementtyp basierend auf dem Namen zuweisen
-            AssignDamage(); // Schaden basierend auf dem Typ zuweisen
-        }
-
-        // Methode zur Zuweisung des richtigen Elementtyps basierend auf dem Kartennamen
-        private ElementType AssignElementType(string name)
-        {
-            switch (name)
-            {
-                case "Dragons":
-                case "FireElves":
-                case "Amaterasu":
-                case "Raijin":
-                case "Tetsu":
-                    return ElementType.Fire; // Fire Typ
-
-                case "Kraken":
-                case "DogMike":
-                case "Susanoo":
-                case "Bankai":
-                case "Wizzard":
-                    return ElementType.Water; // Water Typ
-
-                case "Goblins":
-                case "Knights":
-                case "Orks":
-                case "Rocklee":
-                case "FighterKevin":
-                    return ElementType.Normal; // Normal Typ
-
-                default:
-                    return ElementType.Normal; // Standardwert
-            }
-        }
-
-        // Methode zur Zuweisung des Schadens basierend auf dem Typ
-        private void AssignDamage()
-        {
-            switch (CardElementType)
-            {
-                case ElementType.Normal:
-                    Damage = 50; // Schaden für Normalkarten
-                    break;
-                case ElementType.Fire:
-                    Damage = 70; // Schaden for Type Fire
-                    break;
-                case ElementType.Water:
-                    Damage = 70; // Schaden für Water
-                    break;
-                default:
-                    Damage = 50; // Standardwert für den Fall eines unbekannten Typs
-                    break;
-            }
+            Damage = damage;
+            CardElementType = elementType;
         }
 
         // Berechnung des Schadens basierend auf dem Gegner
@@ -101,4 +51,3 @@ namespace Monster_Trading_Cards_Game.Models
         public abstract void PlayCard();
     }
 }
-

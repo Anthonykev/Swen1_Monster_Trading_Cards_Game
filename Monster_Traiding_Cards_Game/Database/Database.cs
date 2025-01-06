@@ -29,64 +29,64 @@ namespace Monster_Traiding_Cards.Database
                 {
                     connection.Open();
                     var command = new NpgsqlCommand(@"
-                        CREATE TABLE IF NOT EXISTS Users (
-                            Id SERIAL PRIMARY KEY,
-                            Username VARCHAR(50) UNIQUE NOT NULL,
-                            Password VARCHAR(255) NOT NULL,
-                            FullName VARCHAR(100),
-                            EMail VARCHAR(100),
-                            Coins INT DEFAULT 20,
-                            SessionToken VARCHAR(255),
-                            CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                            UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                        );
+                DROP TABLE IF EXISTS Cards CASCADE;
+                CREATE TABLE IF NOT EXISTS Users (
+                    Id SERIAL PRIMARY KEY,
+                    Username VARCHAR(50) UNIQUE NOT NULL,
+                    Password VARCHAR(255) NOT NULL,
+                    FullName VARCHAR(100),
+                    EMail VARCHAR(100),
+                    Coins INT DEFAULT 20,
+                    SessionToken VARCHAR(255),
+                    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UpdatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
 
-                        CREATE TABLE IF NOT EXISTS Cards (
-                            Id SERIAL PRIMARY KEY,
-                            Name VARCHAR(100) NOT NULL,
-                            Type VARCHAR(50) NOT NULL,
-                            Damage INT NOT NULL,
-                            ElementType VARCHAR(50) NOT NULL,
-                            UserId INT REFERENCES Users(Id)
-                        );
+                CREATE TABLE IF NOT EXISTS Cards (
+                    Id SERIAL PRIMARY KEY,
+                    Name VARCHAR(100) UNIQUE NOT NULL, -- Eindeutige Einschränkung hinzugefügt
+                    Type VARCHAR(50) NOT NULL,
+                    Damage INT NOT NULL,
+                    ElementType VARCHAR(50) NOT NULL
+                );
 
-                        CREATE TABLE IF NOT EXISTS UserStacks (
-                            UserId INT REFERENCES Users(Id),
-                            CardId INT REFERENCES Cards(Id),
-                            PRIMARY KEY (UserId, CardId)
-                        );
+                CREATE TABLE IF NOT EXISTS UserStacks (
+                    UserId INT REFERENCES Users(Id),
+                    CardId INT REFERENCES Cards(Id),
+                    PRIMARY KEY (UserId, CardId)
+                );
 
-                        CREATE TABLE IF NOT EXISTS UserDecks (
-                            UserId INT REFERENCES Users(Id),
-                            CardId INT REFERENCES Cards(Id),
-                            PRIMARY KEY (UserId, CardId)
-                        );
+                CREATE TABLE IF NOT EXISTS UserDecks (
+                    UserId INT REFERENCES Users(Id),
+                    CardId INT REFERENCES Cards(Id),
+                    PRIMARY KEY (UserId, CardId)
+                );
 
-                        CREATE TABLE IF NOT EXISTS Packages (
-                            Id SERIAL PRIMARY KEY,
-                            Card1Id INT REFERENCES Cards(Id),
-                            Card2Id INT REFERENCES Cards(Id),
-                            Card3Id INT REFERENCES Cards(Id),
-                            Card4Id INT REFERENCES Cards(Id),
-                            Card5Id INT REFERENCES Cards(Id)
-                        );
+                CREATE TABLE IF NOT EXISTS Packages (
+                    Id SERIAL PRIMARY KEY,
+                    Card1Id INT REFERENCES Cards(Id),
+                    Card2Id INT REFERENCES Cards(Id),
+                    Card3Id INT REFERENCES Cards(Id),
+                    Card4Id INT REFERENCES Cards(Id),
+                    Card5Id INT REFERENCES Cards(Id)
+                );
 
-                        CREATE TABLE IF NOT EXISTS Trades (
-                            Id SERIAL PRIMARY KEY,
-                            UserId INT REFERENCES Users(Id),
-                            OfferedCardId INT REFERENCES Cards(Id),
-                            RequestedCardType VARCHAR(50),
-                            RequestedCardElementType VARCHAR(50)
-                        );
+                CREATE TABLE IF NOT EXISTS Trades (
+                    Id SERIAL PRIMARY KEY,
+                    UserId INT REFERENCES Users(Id),
+                    OfferedCardId INT REFERENCES Cards(Id),
+                    RequestedCardType VARCHAR(50),
+                    RequestedCardElementType VARCHAR(50)
+                );
 
-                        CREATE TABLE IF NOT EXISTS Battles (
-                            Id SERIAL PRIMARY KEY,
-                            User1Id INT REFERENCES Users(Id),
-                            User2Id INT REFERENCES Users(Id),
-                            WinnerId INT REFERENCES Users(Id),
-                            LoserId INT REFERENCES Users(Id)
-                        );
-                    ", connection);
+                CREATE TABLE IF NOT EXISTS Battles (
+                    Id SERIAL PRIMARY KEY,
+                    User1Id INT REFERENCES Users(Id),
+                    User2Id INT REFERENCES Users(Id),
+                    WinnerId INT REFERENCES Users(Id),
+                    LoserId INT REFERENCES Users(Id)
+                );
+            ", connection);
                     command.ExecuteNonQuery();
                     return true;
                 }
@@ -97,6 +97,68 @@ namespace Monster_Traiding_Cards.Database
                 return false;
             }
         }
+
+
+
+
+        public bool AddDefaultCards()
+        {
+            try
+            {
+                using (var connection = GetConnection())
+                {
+                    connection.Open();
+
+                    // Überprüfen, ob bereits Karten in der Datenbank vorhanden sind
+                    var checkCommand = new NpgsqlCommand("SELECT COUNT(*) FROM Cards", connection);
+                    int cardCount = Convert.ToInt32(checkCommand.ExecuteScalar());
+
+                    if (cardCount > 0)
+                    {
+                        // Karten sind bereits in der Datenbank vorhanden, keine weiteren Aktionen erforderlich
+                        return true;
+                    }
+
+                    // Karten sind nicht vorhanden, Standardkarten hinzufügen
+                    var command = new NpgsqlCommand(@"
+                INSERT INTO Cards (Name, Type, Damage, ElementType) VALUES
+                ('Dragons', 'Monster-Card', 70, 'Fire'),
+                ('FireElves', 'Monster-Card', 70, 'Fire'),
+                ('Amaterasu', 'Spell-Card', 70, 'Fire'),
+                ('Raijin', 'Spell-Card', 70, 'Fire'),
+                ('Tetsu', 'Monster-Card', 70, 'Fire'),
+                ('Kraken', 'Monster-Card', 70, 'Water'),
+                ('DogMike', 'Monster-Card', 70, 'Water'),
+                ('Susanoo', 'Spell-Card', 70, 'Water'),
+                ('Bankai', 'Spell-Card', 70, 'Water'),
+                ('Wizzard', 'Spell-Card', 70, 'Water'),
+                ('Goblins', 'Monster-Card', 50, 'Normal'),
+                ('Knights', 'Monster-Card', 50, 'Normal'),
+                ('Orks', 'Monster-Card', 50, 'Normal'),
+                ('Rocklee', 'Monster-Card', 50, 'Normal'),
+                ('FighterKevin', 'Monster-Card', 50, 'Normal'),
+                ('Inferno', 'Spell-Card', 70, 'Fire'),
+                ('Tsunami', 'Spell-Card', 70, 'Water'),
+                ('Earthquake', 'Spell-Card', 50, 'Normal'),
+                ('Blizzard', 'Spell-Card', 70, 'Water'),
+                ('Lightning', 'Spell-Card', 70, 'Fire')
+                ON CONFLICT (Name) DO NOTHING", connection);
+                    command.ExecuteNonQuery();
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error adding default cards: {ex.Message}");
+                return false;
+            }
+        }
+
+
+
+
+
+
 
         public bool RegisterUser(string username, string password, string fullName, string email)
         {
@@ -112,6 +174,11 @@ namespace Monster_Traiding_Cards.Database
                     command.Parameters.AddWithValue("@email", email);
                     return command.ExecuteNonQuery() > 0;
                 }
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23505")
+            {
+                Console.WriteLine($"Error registering user: {ex.Message}");
+                return false;
             }
             catch (Exception ex)
             {

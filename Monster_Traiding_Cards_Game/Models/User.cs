@@ -154,19 +154,40 @@ namespace Monster_Trading_Cards_Game.Models
         /// <returns>The created card.</returns>
         private Card CreateCard(string cardName)
         {
-            if (cardName == "Dragons" || cardName == "FireElves" || cardName == "Kraken" || cardName == "Lion")
+            using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
             {
-                return new MonsterCard(cardName);
+                connection.Open();
+                var command = new NpgsqlCommand("SELECT Id, Name, Damage, ElementType, Type FROM Cards WHERE Name = @name", connection);
+                command.Parameters.AddWithValue("@name", cardName);
+                using (var reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        int id = reader.GetInt32(0);
+                        string name = reader.GetString(1);
+                        int damage = reader.GetInt32(2);
+                        ElementType elementType = Enum.Parse<ElementType>(reader.GetString(3));
+                        string type = reader.GetString(4);
+
+                        if (type == "Monster-Card")
+                        {
+                            return new MonsterCard(id, name, damage, elementType);
+                        }
+                        else if (type == "Spell-Card")
+                        {
+                            return new SpellCard(id, name, damage, elementType);
+                        }
+                        else
+                        {
+                            throw new Exception("Unknown card type");
+                        }
+                    }
+                }
             }
-            else if (cardName == "Wizzard" || cardName == "Tetsu" || cardName == "Amaterasu" || cardName == "Bankai")
-            {
-                return new SpellCard(cardName);
-            }
-            else
-            {
-                return new NormalCard(cardName);
-            }
+            throw new Exception("Card not found in database");
         }
+
+
 
         /// <summary>Clears the user's deck in the database.</summary>
         private void ClearDeckInDatabase()
