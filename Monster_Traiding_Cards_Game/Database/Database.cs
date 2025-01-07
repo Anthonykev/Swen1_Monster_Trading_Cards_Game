@@ -164,28 +164,51 @@ namespace Monster_Traiding_Cards.Database
         {
             try
             {
+                Console.WriteLine($"[RegisterUser] Attempting to register user: {username}, email: {email}");
+
                 using (var connection = GetConnection())
                 {
                     connection.Open();
+                    Console.WriteLine("[RegisterUser] Database connection opened.");
+
                     var command = new NpgsqlCommand("INSERT INTO Users (Username, Password, FullName, EMail) VALUES (@username, @password, @fullName, @email)", connection);
                     command.Parameters.AddWithValue("@username", username);
-                    command.Parameters.AddWithValue("@password", password); // In einer echten Anwendung sollten Sie das Passwort hashen
+                    command.Parameters.AddWithValue("@password", password); // Klartextpasswort wird hier protokolliert
                     command.Parameters.AddWithValue("@fullName", fullName);
                     command.Parameters.AddWithValue("@email", email);
-                    return command.ExecuteNonQuery() > 0;
+
+                    Console.WriteLine("[RegisterUser] Executing SQL command...");
+                    int rowsAffected = command.ExecuteNonQuery();
+
+                    Console.WriteLine($"[RegisterUser] User registered successfully. Rows affected: {rowsAffected}");
+                    return rowsAffected > 0;
                 }
             }
             catch (PostgresException ex) when (ex.SqlState == "23505")
             {
-                Console.WriteLine($"Error registering user: {ex.Message}");
+                Console.WriteLine($"[RegisterUser] Duplicate username detected: {username}. Error: {ex.Message}");
                 return false;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error registering user: {ex.Message}");
+                Console.WriteLine($"[RegisterUser] Unexpected error: {ex.Message}");
+                Console.WriteLine($"[RegisterUser] StackTrace: {ex.StackTrace}");
+
                 return false;
             }
         }
+
+
+        // Passwort-Hashing-Methode
+        private string HashPassword(string password)
+        {
+            using (var sha256 = System.Security.Cryptography.SHA256.Create())
+            {
+                byte[] hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return Convert.ToBase64String(hashedBytes);
+            }
+        }
+
 
         public (bool Success, string Token) AuthenticateUser(string username, string password)
         {

@@ -3,6 +3,7 @@ using Monster_Trading_Cards_Game.Models;
 using Monster_Trading_Cards_Game.Exceptions;
 using Monster_Trading_Cards_Game.Network;
 using System;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Monster_Traiding_Cards.Database;
 
@@ -79,29 +80,76 @@ namespace Monster_Trading_Cards_Game.Network
             {
                 try
                 {
-                    JsonNode? json = JsonNode.Parse(e.Payload);
-                    if (json != null)
+                    Console.WriteLine($"[Handler] Raw payload: {e.Payload}");
+
+                    JsonNode? json = null;
+                    try
                     {
-                        Database db = new Database("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
-                        bool success = db.RegisterUser((string)json["username"]!, (string)json["password"]!, (string)json["fullname"]!, (string)json["email"]!);
-                        status = success ? HttpStatusCode.OK : HttpStatusCode.BAD_REQUEST;
-                        reply = new JsonObject()
+                        json = JsonNode.Parse(e.Payload);
+                        Console.WriteLine("[Handler] JSON parsed successfully.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[Handler] JSON parsing failed: {ex.Message}");
+                        Console.WriteLine($"[Handler] StackTrace: {ex.StackTrace}");
+                        e.Reply(HttpStatusCode.BAD_REQUEST, new JsonObject
                         {
-                            ["success"] = success,
-                            ["message"] = success ? "Registrierung erfolgreich." : "Registrierung fehlgeschlagen."
-                        };
+                            ["success"] = false,
+                            ["message"] = "Invalid JSON format."
+                        }.ToJsonString());
+                        return true;
+                    }
+
+                    string? username = json?["username"]?.ToString();
+                    string? password = json?["password"]?.ToString();
+                    string? fullName = json?["fullname"]?.ToString();
+                    string? email = json?["email"]?.ToString();
+
+                    if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(email))
+                    {
+                        Console.WriteLine("[Handler] Error: Missing required fields in JSON.");
+                        e.Reply(HttpStatusCode.BAD_REQUEST, new JsonObject
+                        {
+                            ["success"] = false,
+                            ["message"] = "Missing required fields."
+                        }.ToJsonString());
+                        return true;
+                    }
+
+                    Console.WriteLine($"[Handler] Parsed JSON: username={username}, password={password}, fullname={fullName}, email={email}");
+
+                    Database db = new Database("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+                    bool success = db.RegisterUser(username, password, fullName ?? string.Empty, email);
+
+                    if (success)
+                    {
+                        Console.WriteLine($"[Handler] User {username} registered successfully.");
+                        e.Reply(HttpStatusCode.OK, new JsonObject
+                        {
+                            ["success"] = true,
+                            ["message"] = "Registration successful."
+                        }.ToJsonString());
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[Handler] Failed to register user {username}.");
+                        e.Reply(HttpStatusCode.BAD_REQUEST, new JsonObject
+                        {
+                            ["success"] = false,
+                            ["message"] = "Registration failed. User might already exist."
+                        }.ToJsonString());
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    reply = new JsonObject()
+                    Console.WriteLine($"[Handler] Unexpected error: {ex.Message}");
+                    Console.WriteLine($"[Handler] StackTrace: {ex.StackTrace}");
+                    e.Reply(HttpStatusCode.INTERNAL_SERVER_ERROR, new JsonObject
                     {
                         ["success"] = false,
-                        ["message"] = "Invalid request."
-                    };
+                        ["message"] = "An unexpected error occurred."
+                    }.ToJsonString());
                 }
-
-                e.Reply(status, reply?.ToJsonString());
                 return true;
             }
             // Benutzer authentifizieren
@@ -135,171 +183,7 @@ namespace Monster_Trading_Cards_Game.Network
                 e.Reply(status, reply?.ToJsonString());
                 return true;
             }
-            // Weitere Benutzer-bezogene Anfragen
-            else if (e.Path.StartsWith("/users"))
-            {
-                if (e.Method == "GET" && e.Path == "/users")
-                {
-                    return HandleGetAllUsers(e);
-                }
-                else if (e.Method == "GET" && e.Path.StartsWith("/users/"))
-                {
-                    return HandleGetUser(e);
-                }
-                else if (e.Method == "POST" && e.Path.EndsWith("/stack/add-package"))
-                {
-                    return HandleAddPackage(e);
-                }
-                else if (e.Method == "POST" && e.Path.EndsWith("/deck/choose"))
-                {
-                    return HandleChooseDeck(e);
-                }
-            }
-
             return false;
-        }
-
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // Private Methoden                                                                                                 //
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        /// <summary>Handles retrieving all users.</summary>
-        private bool HandleGetAllUsers(HttpSvrEventArgs e)
-        {
-            JsonObject? reply = null;
-            int status = HttpStatusCode.UNAUTHORIZED;
-
-            (bool Success, User? User) ses = Token.Authenticate(e);
-
-            if (ses.Success)
-            {
-                JsonArray usersArray = new JsonArray();
-                foreach (var user in User.GetAllUsers())
-                {
-                    usersArray.Add(new JsonObject()
-                    {
-                        ["username"] = user.UserName,
-                        ["fullname"] = user.FullName,
-                        ["email"] = user.EMail
-                    });
-                }
-
-                status = HttpStatusCode.OK;
-                reply = new JsonObject()
-                {
-                    ["success"] = true,
-                    ["users"] = usersArray
-                };
-            }
-            else
-            {
-                reply = new JsonObject()
-                {
-                    ["success"] = false,
-                    ["message"] = "Unauthorized."
-                };
-            }
-
-            e.Reply(status, reply?.ToJsonString());
-            return true;
-        }
-
-        /// <summary>Handles retrieving a specific user.</summary>
-        private bool HandleGetUser(HttpSvrEventArgs e)
-        {
-            JsonObject? reply = null;
-            int status = HttpStatusCode.NOT_FOUND;
-
-            string requestedUser = e.Path.Substring("/users/".Length);
-
-            if (User.Exists(requestedUser))
-            {
-                User? user = User.Get(requestedUser);
-                if (user != null)
-                {
-                    status = HttpStatusCode.OK;
-                    reply = new JsonObject()
-                    {
-                        ["success"] = true,
-                        ["username"] = user.UserName,
-                        ["fullname"] = user.FullName,
-                        ["email"] = user.EMail
-                    };
-                }
-            }
-            else
-            {
-                reply = new JsonObject()
-                {
-                    ["success"] = false,
-                    ["message"] = "User not found."
-                };
-            }
-
-            e.Reply(status, reply?.ToJsonString());
-            return true;
-        }
-
-        /// <summary>Handles adding a package to the user's stack.</summary>
-        private bool HandleAddPackage(HttpSvrEventArgs e)
-        {
-            JsonObject? reply = null;
-            int status = HttpStatusCode.UNAUTHORIZED;
-
-            (bool Success, User? User) ses = Token.Authenticate(e);
-
-            if (ses.Success)
-            {
-                ses.User!.AddPackage();
-                status = HttpStatusCode.OK;
-                reply = new JsonObject()
-                {
-                    ["success"] = true,
-                    ["message"] = "Package added to user's stack."
-                };
-            }
-            else
-            {
-                reply = new JsonObject()
-                {
-                    ["success"] = false,
-                    ["message"] = "Unauthorized."
-                };
-            }
-
-            e.Reply(status, reply?.ToJsonString());
-            return true;
-        }
-
-        /// <summary>Handles selecting a new deck from the user's stack.</summary>
-        private bool HandleChooseDeck(HttpSvrEventArgs e)
-        {
-            JsonObject? reply = null;
-            int status = HttpStatusCode.UNAUTHORIZED;
-
-            (bool Success, User? User) ses = Token.Authenticate(e);
-
-            if (ses.Success)
-            {
-                ses.User!.ChooseDeck();
-                status = HttpStatusCode.OK;
-                reply = new JsonObject()
-                {
-                    ["success"] = true,
-                    ["message"] = "Deck selected from user's stack."
-                };
-            }
-            else
-            {
-                reply = new JsonObject()
-                {
-                    ["success"] = false,
-                    ["message"] = "Unauthorized."
-                };
-            }
-
-            e.Reply(status, reply?.ToJsonString());
-            return true;
         }
     }
 }

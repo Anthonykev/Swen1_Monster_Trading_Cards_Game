@@ -24,6 +24,7 @@ namespace Monster_Trading_Cards_Game
         /// <param name="args">Command line arguments.</param>
         static void Main(string[] args)
         {
+
             HttpSvr svr = new();
             svr.Incoming += Svr_Incoming;
 
