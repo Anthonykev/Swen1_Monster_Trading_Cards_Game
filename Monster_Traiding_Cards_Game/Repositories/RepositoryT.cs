@@ -7,7 +7,6 @@ using System.Data;
 using Npgsql;
 using Monster_Traiding_Cards.Base;
 
-
 namespace Monster_Traiding_Cards.Repositories
 {
     public abstract class Repository<T> : IRepository<T> where T : IAtom, new()
@@ -63,6 +62,46 @@ namespace Monster_Traiding_Cards.Repositories
             }
 
             throw new DataException("No such object.");
+        }
+
+        public virtual IEnumerable<T> GetAll()
+        {
+            List<T> rval = new();
+
+            using (IDbCommand cmd = _Cn.CreateCommand())
+            {
+                cmd.CommandText = $"SELECT {string.Join(", ", _Fields)} FROM {_TableName}";
+
+                using (IDataReader re = cmd.ExecuteReader())
+                {
+                    while (re.Read())
+                    {
+                        rval.Add(_CreateObject(re));
+                    }
+                }
+            }
+
+            return rval;
+        }
+
+        public virtual void Refresh(T obj)
+        {
+            using (IDbCommand cmd = _Cn.CreateCommand())
+            {
+                cmd.CommandText = $"SELECT {string.Join(", ", _Fields)} FROM {_TableName} WHERE {_Fields[0]} = :id";
+                IDataParameter p = cmd.CreateParameter();
+                p.ParameterName = ":id";
+                p.Value = obj.__InternalID;
+                cmd.Parameters.Add(p);
+
+                using (IDataReader re = cmd.ExecuteReader())
+                {
+                    if (re.Read())
+                    {
+                        _RefeshObject(re, obj);
+                    }
+                }
+            }
         }
 
         public virtual void Save(T obj)

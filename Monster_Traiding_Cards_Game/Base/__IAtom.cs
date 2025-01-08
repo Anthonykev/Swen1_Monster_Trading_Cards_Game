@@ -18,7 +18,6 @@ namespace Monster_Traiding_Cards.Base
         /// <summary>Gets or sets the internal ID of an object.</summary>
         public object? __InternalID { get; set; }
 
-
         /// <summary>Gets the editing session for this object.</summary>
         public Session? __EditingSession { get; }
     }

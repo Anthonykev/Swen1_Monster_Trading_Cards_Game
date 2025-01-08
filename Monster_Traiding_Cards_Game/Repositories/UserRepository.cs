@@ -22,8 +22,8 @@ namespace Monster_Traiding_Cards.Repositories
         internal UserRepository()
         {
             _TableName = "USERS";
-            _Fields = ["USERNAME", "NAME", "EMAIL", "HADMIN"];
-            _Params = [":id", ":n", ":m", ":a"];
+            _Fields = new string[] { "USERNAME", "NAME", "EMAIL", "HADMIN" };
+            _Params = new string[] { ":id", ":n", ":m", ":a" };
         }
 
 

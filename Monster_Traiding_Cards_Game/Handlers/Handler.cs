@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Text.Json.Nodes;
-using Monster_Traiding_Cards.Server
+using Monster_Traiding_Cards.Server;
+using Monster_Traiding_Cards.Handlers;
 
-using System.Reflection.Metadata;
 
 namespace Monster_Traiding_Cards.Handlers
 {
@@ -23,8 +23,6 @@ namespace Monster_Traiding_Cards.Handlers
 
         /// <summary>List of available handlers.</summary>
         private static List<IHandler>? _Handlers = null;
-
-
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // private static methods                                                                                           //
@@ -49,8 +47,6 @@ namespace Monster_Traiding_Cards.Handlers
             return rval;
         }
 
-
-
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // public static methods                                                                                            //
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -72,8 +68,6 @@ namespace Monster_Traiding_Cards.Handlers
                 e.Reply(HttpStatusCode.BAD_REQUEST, new JsonObject() { ["success"] = false, ["message"] = "Bad request" }.ToJsonString());
             });
         }
-
-
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // [interface] IHandler                                                                                             //

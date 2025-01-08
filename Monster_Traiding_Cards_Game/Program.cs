@@ -1,8 +1,10 @@
 ﻿using System;
-using Monster_Trading_Cards_Game.Models;
-using Monster_Trading_Cards_Game.Network;
-using Monster_Trading_Cards_Game.Interfaces;
-using Monster_Traiding_Cards.Database;
+using Monster_Traiding_Cards.Handlers;
+using Monster_Traiding_Cards.Server;
+using Monster_Traiding_Cards.Security;
+using Monster_Traiding_Cards.Base;
+using Monster_Traiding_Cards.Repositories;
+
 
 namespace Monster_Trading_Cards_Game
 {
@@ -32,9 +34,10 @@ namespace Monster_Trading_Cards_Game
             Console.WriteLine("Server läuft auf http://127.0.0.1:12000");
         }
 
-        private static void Svr_Incoming(object sender, HttpSvrEventArgs e)
+        private static async void Svr_Incoming(object sender, HttpSvrEventArgs e)
         {
-            Handler.HandleEvent(e);
+            await Handler.HandleEvent(e);
         }
+
     }
 }

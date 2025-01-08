@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Monster_Traiding_Cards.Security;
+﻿using Monster_Traiding_Cards.Security;
 
 namespace Monster_Traiding_Cards.Base
 {
-    /// <summary>This class provides a base implementation of the IAtom interface.</summary>
     public abstract class Atom : IAtom, __IAtom
     {
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -20,8 +14,6 @@ namespace Monster_Traiding_Cards.Base
         /// <summary>Internal ID.</summary>
         protected object? _InternalID = null;
 
-
-
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // protected methods                                                                                                //
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -32,8 +24,6 @@ namespace Monster_Traiding_Cards.Base
         {
             _InternalID = id;
         }
-
-
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // [interface] IAtom                                                                                                //
@@ -46,26 +36,20 @@ namespace Monster_Traiding_Cards.Base
             _EditingSession = session;
         }
 
-
         /// <summary>Ends editing an object.</summary>
         public virtual void EndEdit()
         {
             _EditingSession = null;
         }
 
-
         /// <summary>Deletes the object.</summary>
         public abstract void Delete();
-
 
         /// <summary>Saves the object.</summary>
         public abstract void Save();
 
-
         /// <summary>Refrehes the object.</summary>
         public abstract void Refresh();
-
-
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // [interface] __IAtom                                                                                              //
@@ -77,7 +61,6 @@ namespace Monster_Traiding_Cards.Base
             get { return _InternalID; }
             set { _SetID(value); }
         }
-
 
         /// <summary>Gets the editing user for this object.</summary>
         Session? __IAtom.__EditingSession
