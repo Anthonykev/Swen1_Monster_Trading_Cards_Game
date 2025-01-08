@@ -1,13 +1,12 @@
-﻿using Monster_Trading_Cards_Game.Network;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Monster_Traiding_Cards.Server;
 
-namespace Monster_Trading_Cards_Game.Interfaces
+namespace Monster_Traiding_Cards.Handlers
 {
-
     /// <summary>Handlers that handle HTTP requests implement this interface.</summary>
     public interface IHandler
     {

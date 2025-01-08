@@ -1,13 +1,15 @@
-﻿using Monster_Trading_Cards_Game.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
+using System.Text.Json.Nodes;
+using Monster_Traiding_Cards.Server
 
-namespace Monster_Trading_Cards_Game.Network
+using System.Reflection.Metadata;
+
+namespace Monster_Traiding_Cards.Handlers
 {
     /// <summary>This class provides an abstract implementation of the
     /// <see cref="IHandler"/> interface. It also implements static methods
@@ -35,11 +37,11 @@ namespace Monster_Trading_Cards_Game.Network
             List<IHandler> rval = new();
 
             foreach (Type i in Assembly.GetExecutingAssembly().GetTypes()
-                              .Where(m => m.IsAssignableTo(typeof(IHandler)) && (!m.IsAbstract)))
-            {
-                IHandler? h = (IHandler?)Activator.CreateInstance(i);
+                              .Where(m => m.IsAssignableTo(typeof(IHandler)) && !m.IsAbstract))
+            {                                                                   // iterate all concrete types that implement IHandler
+                IHandler? h = (IHandler?)Activator.CreateInstance(i);          // create an instance
                 if (h != null)
-                {
+                {                                                               // add to result set
                     rval.Add(h);
                 }
             }
@@ -55,15 +57,20 @@ namespace Monster_Trading_Cards_Game.Network
 
         /// <summary>Handles an incoming HTTP request.</summary>
         /// <param name="e">Event arguments.</param>
-        public static void HandleEvent(HttpSvrEventArgs e)
+        public static async Task HandleEvent(HttpSvrEventArgs e)
         {
-            _Handlers ??= _GetHandlers();
-
-            foreach (IHandler i in _Handlers)
+            await Task.Run(() =>
             {
-                if (i.Handle(e)) return;
-            }
-            e.Reply(HttpStatusCode.BAD_REQUEST);
+                _Handlers ??= _GetHandlers();                                       // initialize handlers if needed
+
+                foreach (IHandler i in _Handlers)
+                {                                                                   // iterate handlers to find one that handles the request
+                    if (i.Handle(e)) return;
+                }
+
+                // reply 400 if no handler was able to process the request
+                e.Reply(HttpStatusCode.BAD_REQUEST, new JsonObject() { ["success"] = false, ["message"] = "Bad request" }.ToJsonString());
+            });
         }
 
 
@@ -79,4 +86,3 @@ namespace Monster_Trading_Cards_Game.Network
         public abstract bool Handle(HttpSvrEventArgs e);
     }
 }
-

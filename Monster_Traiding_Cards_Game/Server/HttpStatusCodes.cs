@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Monster_Trading_Cards_Game.Network
+namespace Monster_Traiding_Cards.Server
 {
     /// <summary>This enumeration defines HTTP status codes that are used by
     ///          the <see cref="HttpSvr"/> implementation.</summary>
@@ -21,7 +21,5 @@ namespace Monster_Trading_Cards_Game.Network
 
         /// <summary>Status code NOT FOUND.</summary>
         public const int NOT_FOUND = 404;
-
-        public const int INTERNAL_SERVER_ERROR = 500;
     }
 }

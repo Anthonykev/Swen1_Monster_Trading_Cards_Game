@@ -1,10 +1,11 @@
-﻿using Monster_Trading_Cards_Game.Network;
+﻿using Monster_Trading_Cards_Game;
 using System;
-using System.Net;
 using System.Net.Sockets;
+using System.Net;
 using System.Text;
+using Monster_Traiding_Cards.Server;
 
-namespace Monster_Trading_Cards_Game.Network
+namespace Monster_Trading_Cards.Server
 {
     /// <summary>This class implements a HTTP server.</summary>
     public sealed class HttpSvr

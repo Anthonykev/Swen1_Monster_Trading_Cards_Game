@@ -4,8 +4,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Collections.Generic;
 
-//4)
-namespace Monster_Trading_Cards_Game.Network
+namespace Monster_Traiding_Cards.Server
 {
     public class HttpSvrEventArgs : EventArgs
     {

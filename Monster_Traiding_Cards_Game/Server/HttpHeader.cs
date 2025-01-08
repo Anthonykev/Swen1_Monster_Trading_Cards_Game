@@ -4,10 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-
-//5)
-
-namespace Monster_Trading_Cards_Game.Network
+namespace Monster_Traiding_Cards.Server
 {
     public class HttpHeader  //Declares a class HttpHeader which represents a single HTTP header.
     {
