@@ -23,7 +23,7 @@ namespace Monster_Traiding_Cards.Repositories
             {
                 if (_DbConnection == null)
                 {
-                    _DbConnection = new NpgsqlConnection("Host=localhost;Username=myuser;Password=mypassword;Database=mydatabase");
+                    _DbConnection = new NpgsqlConnection("Host=localhost;Username=kevin;Password=spiel12345;Database=monster_cards");
                     _DbConnection.Open();
                 }
 
@@ -110,7 +110,7 @@ namespace Monster_Traiding_Cards.Repositories
             {
                 using (IDbCommand cmd = _Cn.CreateCommand())
                 {
-                    cmd.CommandText = $"INSERT INTO {_TableName} ({string.Join(", ", _Fields.Skip(1))}) VALUES ({string.Join(", ", _Params.Skip(1))}) RETURNING {_Fields[0]}";
+                    cmd.CommandText = $"INSERT INTO {_TableName} ({string.Join(", ", _Fields.Skip(1))}) VALUES ({string.join(", ", _Params.Skip(1))}) RETURNING {_Fields[0]}";
                     _FillParameters(cmd, obj);
                     obj.__InternalID = Convert.ToInt32(cmd.ExecuteScalar()!);
                 }
