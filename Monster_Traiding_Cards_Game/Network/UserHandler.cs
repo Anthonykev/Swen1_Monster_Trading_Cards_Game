@@ -6,23 +6,34 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Monster_Trading_Cards_Game.Repositories;
+using Monster_Trading_Cards_Game.Database; // Aktualisieren Sie den Namespace
 
 namespace Monster_Trading_Cards_Game.Network
 {
     public class UserHandler : Handler, IHandler
     {
-        private readonly CreateTablesRepository _createTablesRepository;
-        private readonly AddDefaultCardsRepository _addDefaultCardsRepository;
-        private readonly RegisterUserRepository _registerUserRepository;
-        private readonly AuthenticateUserRepository _authenticateUserRepository;
+        private readonly CreateTables _createTables;
+        private readonly CardRepository _cardRepository;
+        private readonly UserRepository _userRepository;
+        private readonly UserStackRepository _userStackRepository;
+        private readonly UserDeckRepository _userDeckRepository;
+        private readonly PackageRepository _packageRepository;
+        private readonly TradeRepository _tradeRepository;
+        private readonly BattleRepository _battleRepository;
+        private readonly BattleRoundRepository _battleRoundRepository;
 
         public UserHandler()
         {
             string connectionString = "Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards";
-            _createTablesRepository = new CreateTablesRepository(connectionString);
-            _addDefaultCardsRepository = new AddDefaultCardsRepository(connectionString);
-            _registerUserRepository = new RegisterUserRepository(connectionString);
-            _authenticateUserRepository = new AuthenticateUserRepository(connectionString);
+            _createTables = new CreateTables(connectionString);
+            _cardRepository = new CardRepository(connectionString);
+            _userRepository = new UserRepository(connectionString);
+            _userStackRepository = new UserStackRepository(connectionString);
+            _userDeckRepository = new UserDeckRepository(connectionString);
+            _packageRepository = new PackageRepository(connectionString);
+            _tradeRepository = new TradeRepository(connectionString);
+            _battleRepository = new BattleRepository(connectionString);
+            _battleRoundRepository = new BattleRoundRepository(connectionString);
         }
 
         public override bool Handle(HttpSvrEventArgs e)
@@ -32,7 +43,7 @@ namespace Monster_Trading_Cards_Game.Network
 
             if ((e.Path.TrimEnd('/', ' ', '\t') == "/create-tables") && (e.Method == "POST"))
             {
-                if (_createTablesRepository.CreateTables())
+                if (_createTables.Execute_CreateTables())
                 {
                     status = HttpStatusCode.OK;
                     reply = new JsonObject()
@@ -56,7 +67,7 @@ namespace Monster_Trading_Cards_Game.Network
             }
             else if ((e.Path.TrimEnd('/', ' ', '\t') == "/add-default-cards") && (e.Method == "POST"))
             {
-                if (_addDefaultCardsRepository.AddDefaultCards())
+                if (_cardRepository.AddDefaultCards())
                 {
                     status = HttpStatusCode.OK;
                     reply = new JsonObject()
@@ -98,7 +109,7 @@ namespace Monster_Trading_Cards_Game.Network
                         return true;
                     }
 
-                    bool success = _registerUserRepository.RegisterUser(username, password, fullName ?? string.Empty, email);
+                    bool success = _userRepository.CreateUser(username, password, fullName ?? string.Empty, email);
 
                     if (success)
                     {
@@ -145,11 +156,11 @@ namespace Monster_Trading_Cards_Game.Network
                         return true;
                     }
 
-                    var (success, token) = _authenticateUserRepository.AuthenticateUser(username, password);
+                    var (success, token) = _userRepository.AuthenticateUser(username, password);
 
                     if (success)
                     {
-                        e.Reply(HttpStatusCode.OK, new JsonObject
+                        e.Reply(HttpStatusCode.OK, new JsonObject()
                         {
                             ["success"] = true,
                             ["token"] = token,
@@ -158,7 +169,7 @@ namespace Monster_Trading_Cards_Game.Network
                     }
                     else
                     {
-                        e.Reply(HttpStatusCode.UNAUTHORIZED, new JsonObject
+                        e.Reply(HttpStatusCode.UNAUTHORIZED, new JsonObject()
                         {
                             ["success"] = false,
                             ["message"] = "Invalid username or password."
@@ -167,7 +178,7 @@ namespace Monster_Trading_Cards_Game.Network
                 }
                 catch (Exception ex)
                 {
-                    e.Reply(HttpStatusCode.INTERNAL_SERVER_ERROR, new JsonObject
+                    e.Reply(HttpStatusCode.INTERNAL_SERVER_ERROR, new JsonObject()
                     {
                         ["success"] = false,
                         ["message"] = "An unexpected error occurred."

@@ -5,13 +5,40 @@ using System.Security.Cryptography;
 
 namespace Monster_Trading_Cards_Game.Repositories
 {
-    public class AuthenticateUserRepository
+    public class UserRepository
     {
         private readonly string _connectionString;
 
-        public AuthenticateUserRepository(string connectionString)
+        public UserRepository(string connectionString)
         {
             _connectionString = connectionString;
+        }
+
+        public bool CreateUser(string username, string password, string fullName, string email)
+        {
+            try
+            {
+                using (var connection = new NpgsqlConnection(_connectionString))
+                {
+                    connection.Open();
+                    var command = new NpgsqlCommand("INSERT INTO Users (Username, Password, FullName, EMail) VALUES (@username, @password, @fullName, @email)", connection);
+                    command.Parameters.AddWithValue("@username", username);
+                    command.Parameters.AddWithValue("@password", GetPasswordHash(username, password)); // Passwort wird hier gehasht
+                    command.Parameters.AddWithValue("@fullName", fullName);
+                    command.Parameters.AddWithValue("@email", email);
+                    return command.ExecuteNonQuery() > 0;
+                }
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23505")
+            {
+                Console.WriteLine($"Duplicate username detected: {username}. Error: {ex.Message}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error: {ex.Message}");
+                return false;
+            }
         }
 
         public (bool Success, string Token) AuthenticateUser(string username, string password)
@@ -79,3 +106,5 @@ namespace Monster_Trading_Cards_Game.Repositories
         }
     }
 }
+
+

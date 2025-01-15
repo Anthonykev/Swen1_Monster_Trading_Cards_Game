@@ -1,18 +1,18 @@
-﻿using Npgsql;
+using Npgsql;
 using System;
 
-namespace Monster_Trading_Cards_Game.Repositories
+namespace Monster_Trading_Cards_Game.Database
 {
-    public class CreateTablesRepository
+    public class CreateTables
     {
         private readonly string _connectionString;
 
-        public CreateTablesRepository(string connectionString)
+        public CreateTables(string connectionString)
         {
             _connectionString = connectionString;
         }
 
-        public bool CreateTables()
+        public bool Execute_CreateTables()
         {
             try
             {
@@ -113,6 +113,5 @@ namespace Monster_Trading_Cards_Game.Repositories
                 return false;
             }
         }
-
     }
 }

@@ -1,13 +1,13 @@
-ï»¿using Npgsql;
+using Npgsql;
 using System;
 
 namespace Monster_Trading_Cards_Game.Repositories
 {
-    public class AddDefaultCardsRepository
+    public class CardRepository
     {
         private readonly string _connectionString;
 
-        public AddDefaultCardsRepository(string connectionString)
+        public CardRepository(string connectionString)
         {
             _connectionString = connectionString;
         }
@@ -20,7 +20,7 @@ namespace Monster_Trading_Cards_Game.Repositories
                 {
                     connection.Open();
 
-                    // ÃœberprÃ¼fen, ob bereits Karten in der Datenbank vorhanden sind
+                    // Überprüfen, ob bereits Karten in der Datenbank vorhanden sind
                     var checkCommand = new NpgsqlCommand("SELECT COUNT(*) FROM Cards", connection);
                     int cardCount = Convert.ToInt32(checkCommand.ExecuteScalar());
 
@@ -30,7 +30,7 @@ namespace Monster_Trading_Cards_Game.Repositories
                         return true;
                     }
 
-                    // Karten sind nicht vorhanden, Standardkarten hinzufÃ¼gen
+                    // Karten sind nicht vorhanden, Standardkarten hinzufügen
                     var command = new NpgsqlCommand(@"
                         INSERT INTO Cards (Name, Type, Damage, ElementType) VALUES
                         ('Dragons', 'Monster-Card', 70, 'Fire'),
@@ -66,3 +66,5 @@ namespace Monster_Trading_Cards_Game.Repositories
         }
     }
 }
+
+
