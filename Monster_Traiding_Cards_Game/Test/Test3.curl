@@ -3,11 +3,11 @@ curl -X POST http://127.0.0.1:12000/create-tables
 #Standardkarten zur Datenbank hinzufügen
 curl -X POST http://127.0.0.1:12000/add-default-cards
 #Benutzer registrieren
-curl -X POST http://127.0.0.1:12000/register -H "Content-Type: application/json" -d '{"username":"koaka","password":"password123","fullname":"Test User","email":"kodzo@example.com"}'
-curl -X POST http://127.0.0.1:12000/register -H "Content-Type: application/json" -d '{"username":"kodzo2","password":"password123","fullname":"Test User 2","email":"kodzo2@example.com"}'
+curl -X POST http://127.0.0.1:12000/register -H "Content-Type: application/json" -d "{\"username\":\"Momo\",\"password\":\"password123\",\"fullname\":\"Test User\",\"email\":\"kodzo@example.com\"}" 
+curl -X POST http://127.0.0.1:12000/register -H "Content-Type: application/json" -d "{\"username\":\"Momo2\",\"password\":\"password123\",\"fullname\":\"Test User\",\"email\":\"kodzo@example.com\"}" 
 #Benutzer authentifizieren
-curl -X POST http://127.0.0.1:12000/login -H "Content-Type: application/json" -d '{"username":"kodzo","password":"password123"}'
-curl -X POST http://127.0.0.1:12000/login -H "Content-Type: application/json" -d '{"username":"kodzo2","password":"password123"}'
+curl -X POST http://127.0.0.1:12000/login -H "Content-Type: application/json" -d "{\"username\":\"Momo\",\"password\":\"password123\"}"
+curl -X POST http://127.0.0.1:12000/login -H "Content-Type: application/json" -d "{\"username\":\"Momo\",\"password\":\"password123\"}"
 #Pakete hinzufügen
 curl -X POST http://127.0.0.1:12000/users/kodzo/stack/add-package -H "Authorization: Bearer <token>"
 curl -X POST http://127.0.0.1:12000/users/kodzo2/stack/add-package -H "Authorization: Bearer <token>"
