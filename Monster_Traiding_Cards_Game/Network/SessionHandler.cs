@@ -138,9 +138,11 @@ namespace Monster_Trading_Cards_Game.Network
 
         public static void LogoutAllUsers()
         {
-            foreach (var token in ActiveSessions.Keys)
+            using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
             {
-                UpdateUserTokenInDatabase(token, null);
+                connection.Open();
+                var command = new NpgsqlCommand("UPDATE Users SET SessionToken = NULL WHERE SessionToken IS NOT NULL", connection);
+                command.ExecuteNonQuery();
             }
             ActiveSessions.Clear();
         }

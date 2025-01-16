@@ -67,3 +67,7 @@ curl -X POST http://127.0.0.1:12000/battle -H "Authorization: Bearer %TOKEN1%" -
 REM Benutzer abmelden
 curl -X POST http://127.0.0.1:12000/sessions/logout -H "Content-Type: application/json" -d "{\"token\":\"%TOKEN1%\"}"
 curl -X POST http://127.0.0.1:12000/sessions/logout -H "Content-Type: application/json" -d "{\"token\":\"%TOKEN2%\"}"
+
+-----------------------------------------------------
+
+curl -X POST http://127.0.0.1:12000/buy-package -H "Content-Type: application/json" -d "{\"token\":\"your_token_here\", \"username\":\"Momo\"}"

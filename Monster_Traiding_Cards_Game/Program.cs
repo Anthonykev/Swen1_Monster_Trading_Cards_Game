@@ -37,7 +37,7 @@ namespace Monster_Trading_Cards_Game
         {
             Handler.HandleEvent(e);
         }
-        
+
         private static void OnProcessExit(object? sender, EventArgs e)
         {
             SessionHandler.LogoutAllUsers();

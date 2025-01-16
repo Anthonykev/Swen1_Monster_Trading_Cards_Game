@@ -101,9 +101,23 @@ namespace Monster_Trading_Cards_Game.Models
             }
         }
 
-        /// <summary>Allows the user to buy a package of 5 cards.</summary>
-        public void AddPackage()
+        /// <summary>Checks if the user is authenticated.</summary>
+        /// <param name="token">Token of the session trying to perform the action.</param>
+        /// <returns>True if the user is authenticated, otherwise false.</returns>
+        public bool IsAuthenticated(string token)
         {
+            (bool Success, User? User) auth = Token.Authenticate(token);
+            return auth.Success && auth.User!.UserName == UserName;
+        }
+
+        /// <summary>Allows the user to buy a package of 5 cards.</summary>
+        public void AddPackage(string token)
+        {
+            if (!IsAuthenticated(token))
+            {
+                throw new AuthenticationException("User is not authenticated.");
+            }
+
             if (Coins < 5)
             {
                 throw new Exception("Not enough coins to buy a package. You need at least 5 coins.");

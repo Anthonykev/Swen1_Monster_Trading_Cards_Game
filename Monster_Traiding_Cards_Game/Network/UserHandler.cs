@@ -186,6 +186,53 @@ namespace Monster_Trading_Cards_Game.Network
                 }
                 return true;
             }
+            else if ((e.Path.TrimEnd('/', ' ', '\t') == "/buy-package") && (e.Method == "POST"))
+            {
+                try
+                {
+                    JsonNode? json = JsonNode.Parse(e.Payload);
+                    string? token = json?["token"]?.ToString();
+                    string? username = json?["username"]?.ToString();
+
+                    if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(username))
+                    {
+                        e.Reply(HttpStatusCode.BAD_REQUEST, new JsonObject
+                        {
+                            ["success"] = false,
+                            ["message"] = "Missing token or username."
+                        }.ToJsonString());
+                        return true;
+                    }
+
+                    User? user = User.Get(username);
+                    if (user == null)
+                    {
+                        e.Reply(HttpStatusCode.BAD_REQUEST, new JsonObject
+                        {
+                            ["success"] = false,
+                            ["message"] = "User not found."
+                        }.ToJsonString());
+                        return true;
+                    }
+
+                    user.AddPackage(token);
+
+                    e.Reply(HttpStatusCode.OK, new JsonObject
+                    {
+                        ["success"] = true,
+                        ["message"] = "Package bought successfully."
+                    }.ToJsonString());
+                }
+                catch (Exception ex)
+                {
+                    e.Reply(HttpStatusCode.INTERNAL_SERVER_ERROR, new JsonObject
+                    {
+                        ["success"] = false,
+                        ["message"] = "An unexpected error occurred."
+                    }.ToJsonString());
+                }
+                return true;
+            }
 
             return false;
         }
