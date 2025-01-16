@@ -1,5 +1,7 @@
 using Npgsql;
 using System;
+using System.Collections.Generic;
+using Monster_Trading_Cards_Game.Models;
 
 namespace Monster_Trading_Cards_Game.Repositories
 {
@@ -64,7 +66,58 @@ namespace Monster_Trading_Cards_Game.Repositories
                 return false;
             }
         }
+
+        public List<string> GetCardNamesFromDatabase()
+        {
+            List<string> cardNames = new();
+            using (var connection = new NpgsqlConnection(_connectionString))
+            {
+                connection.Open();
+                var command = new NpgsqlCommand("SELECT Name FROM Cards", connection);
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        cardNames.Add(reader.GetString(0));
+                    }
+                }
+            }
+            return cardNames;
+        }
+
+        public Card CreateCard(string cardName)
+        {
+            using (var connection = new NpgsqlConnection(_connectionString))
+            {
+                connection.Open();
+                var command = new NpgsqlCommand("SELECT Id, Name, Damage, ElementType, Type FROM Cards WHERE Name = @name", connection);
+                command.Parameters.AddWithValue("@name", cardName);
+                using (var reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        int id = reader.GetInt32(0);
+                        string name = reader.GetString(1);
+                        int damage = reader.GetInt32(2);
+                        ElementType elementType = Enum.Parse<ElementType>(reader.GetString(3));
+                        string type = reader.GetString(4);
+
+                        if (type == "Monster-Card")
+                        {
+                            return new MonsterCard(id, name, damage, elementType);
+                        }
+                        else if (type == "Spell-Card")
+                        {
+                            return new SpellCard(id, name, damage, elementType);
+                        }
+                        else
+                        {
+                            throw new Exception("Unknown card type");
+                        }
+                    }
+                }
+            }
+            throw new Exception("Card not found in database");
+        }
     }
 }
-
-

@@ -10,6 +10,7 @@ using Monster_Trading_Cards_Game.Exceptions;
 using Monster_Trading_Cards_Game.Interfaces;
 using Monster_Trading_Cards_Game.Network;
 using Npgsql;
+using Monster_Trading_Cards_Game.Repositories;
 
 namespace Monster_Trading_Cards_Game.Models
 {
@@ -92,7 +93,7 @@ namespace Monster_Trading_Cards_Game.Models
                     throw new SecurityException("Trying to change other user's data.");
                 }
                 // Save data to database
-                SaveToDatabase();
+                new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").SaveToDatabase(this);
             }
             else
             {
@@ -110,23 +111,24 @@ namespace Monster_Trading_Cards_Game.Models
 
             Coins -= 5;
             Random randNames = new();
-            List<string> cardNames = GetCardNamesFromDatabase();
+            CardRepository cardRepository = new CardRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+            List<string> cardNames = cardRepository.GetCardNamesFromDatabase();
 
             for (int i = 0; i < 5; i++)
             {
                 string cardName = cardNames[randNames.Next(cardNames.Count)];
-                Stack.Add(CreateCard(cardName));
+                Stack.Add(cardRepository.CreateCard(cardName));
             }
 
             // Save changes to database
-            SaveToDatabase();
+            new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").SaveToDatabase(this);
         }
 
         /// <summary>Selects the best cards from the stack to add them to the deck.</summary>
         public void ChooseDeck()
         {
             // Clear the current deck in the database
-            ClearDeckInDatabase();
+            new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").ClearDeckInDatabase(UserName);
 
             // Select the best cards from the stack
             var sortedStack = Stack
@@ -140,7 +142,7 @@ namespace Monster_Trading_Cards_Game.Models
             Deck = sortedStack.Take(4).ToList();
 
             // Save changes to database
-            SaveToDatabase();
+            new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").SaveToDatabase(this);
         }
 
         /// <summary>Returns all cards from the deck to the stack.</summary>
@@ -148,176 +150,26 @@ namespace Monster_Trading_Cards_Game.Models
         {
             Stack.AddRange(Deck);
             Deck.Clear();
-            SaveToDatabase();
-        }
-
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        // private methods                                                                                                  //
-        //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        /// <summary>Creates a new card based on the card name.</summary>
-        /// <param name="cardName">The name of the card.</param>
-        /// <returns>The created card.</returns>
-        private Card CreateCard(string cardName)
-        {
-            using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
-            {
-                connection.Open();
-                var command = new NpgsqlCommand("SELECT Id, Name, Damage, ElementType, Type FROM Cards WHERE Name = @name", connection);
-                command.Parameters.AddWithValue("@name", cardName);
-                using (var reader = command.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-                        int id = reader.GetInt32(0);
-                        string name = reader.GetString(1);
-                        int damage = reader.GetInt32(2);
-                        ElementType elementType = Enum.Parse<ElementType>(reader.GetString(3));
-                        string type = reader.GetString(4);
-
-                        if (type == "Monster-Card")
-                        {
-                            return new MonsterCard(id, name, damage, elementType);
-                        }
-                        else if (type == "Spell-Card")
-                        {
-                            return new SpellCard(id, name, damage, elementType);
-                        }
-                        else
-                        {
-                            throw new Exception("Unknown card type");
-                        }
-                    }
-                }
-            }
-            throw new Exception("Card not found in database");
-        }
-
-        /// <summary>Gets the available card names from the database.</summary>
-        /// <returns>A list of card names.</returns>
-        private List<string> GetCardNamesFromDatabase()
-        {
-            List<string> cardNames = new();
-            using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
-            {
-                connection.Open();
-                var command = new NpgsqlCommand("SELECT Name FROM Cards", connection);
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        cardNames.Add(reader.GetString(0));
-                    }
-                }
-            }
-            return cardNames;
-        }
-
-        /// <summary>Clears the user's deck in the database.</summary>
-        private void ClearDeckInDatabase()
-        {
-            using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
-            {
-                connection.Open();
-                var command = new NpgsqlCommand(@"
-                    DELETE FROM UserDecks
-                    WHERE UserId = (SELECT Id FROM Users WHERE UserName = @username)", connection);
-                command.Parameters.AddWithValue("@username", UserName);
-                command.ExecuteNonQuery();
-            }
-        }
-
-        /// <summary>Saves the user data to the database.</summary>
-        private void SaveToDatabase()
-        {
-            using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
-            {
-                connection.Open();
-                var command = new NpgsqlCommand(@"
-                    INSERT INTO Users (UserName, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames)
-                    VALUES (@username, @fullname, @email, @coins, @password, @sessiontoken, @elo, @wins, @losses, @totalgames)
-                    ON CONFLICT (UserName) DO UPDATE
-                    SET FullName = @fullname, EMail = @email, Coins = @coins, Password = @password, SessionToken = @sessiontoken, Elo = @elo, Wins = @wins, Losses = @losses, TotalGames = @totalgames", connection);
-                command.Parameters.AddWithValue("@username", UserName);
-                command.Parameters.AddWithValue("@fullname", FullName);
-                command.Parameters.AddWithValue("@password", Password); 
-                command.Parameters.AddWithValue("@email", EMail);
-                command.Parameters.AddWithValue("@coins", Coins);
-                command.Parameters.AddWithValue("@sessiontoken", SessionToken ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("@elo", Elo);
-                command.Parameters.AddWithValue("@wins", Wins);
-                command.Parameters.AddWithValue("@losses", Losses);
-                command.Parameters.AddWithValue("@totalgames", TotalGames);
-                command.ExecuteNonQuery();
-
-                // Save the user's stack to the database
-                foreach (var card in Stack)
-                {
-                    var cardCommand = new NpgsqlCommand(@"
-                        INSERT INTO UserStacks (UserId, CardId)
-                        VALUES ((SELECT Id FROM Users WHERE UserName = @username), @cardid)
-                        ON CONFLICT (UserId, CardId) DO NOTHING", connection);
-                    cardCommand.Parameters.AddWithValue("@username", UserName);
-                    cardCommand.Parameters.AddWithValue("@cardid", card.Id);
-                    cardCommand.ExecuteNonQuery();
-                }
-
-                // Save the user's deck to the database
-                foreach (var card in Deck)
-                {
-                    var cardCommand = new NpgsqlCommand(@"
-                        INSERT INTO UserDecks (UserId, CardId)
-                        VALUES ((SELECT Id FROM Users WHERE UserName = @username), @cardid)
-                        ON CONFLICT (UserId, CardId) DO NOTHING", connection);
-                    cardCommand.Parameters.AddWithValue("@username", UserName);
-                    cardCommand.Parameters.AddWithValue("@cardid", card.Id);
-                    cardCommand.ExecuteNonQuery();
-                }
-            }
+            new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").SaveToDatabase(this);
         }
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // public static methods                                                                                            //
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        /// <summary>Creates a user.</summary>
-        public static void Create(string userName, string password, string fullName = "", string eMail = "")
-        {
-            if (_Users.ContainsKey(userName))
-            {
-                throw new UserException("User name already exists.");
-            }
-
-            User user = new()
-            {
-                UserName = userName,
-                Password = HashPassword(password), // Passwort hashen
-                FullName = fullName,
-                EMail = eMail,
-                Elo = 100 // Initial Elo rating
-            };
-
-            _Users.Add(user.UserName, user);
-
-            // Save user to database
-            user.SaveToDatabase();
-        }
-
         /// <summary>Performs a user logon.</summary>
-
         public static (bool Success, string Token) Logon(string userName, string password)
         {
             if (_Users.ContainsKey(userName) && VerifyPassword(password, _Users[userName].Password)) // Passwort verifizieren
             {
                 string token = Token._CreateTokenFor(_Users[userName]);
                 _Users[userName].SessionToken = token;
-                _Users[userName].SaveToDatabase();
+                new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").SaveToDatabase(_Users[userName]);
                 return (true, token);
             }
 
             return (false, string.Empty);
         }
-
 
         public static bool Exists(string userName)
         {
