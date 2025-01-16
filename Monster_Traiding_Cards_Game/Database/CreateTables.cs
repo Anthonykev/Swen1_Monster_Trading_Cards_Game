@@ -20,14 +20,6 @@ namespace Monster_Trading_Cards_Game.Database
                 {
                     connection.Open();
                     var command = new NpgsqlCommand(@"
-                DROP TABLE IF EXISTS BattleRounds CASCADE;
-                DROP TABLE IF EXISTS Battles CASCADE;
-                DROP TABLE IF EXISTS Trades CASCADE;
-                DROP TABLE IF EXISTS Packages CASCADE;
-                DROP TABLE IF EXISTS UserDecks CASCADE;
-                DROP TABLE IF EXISTS UserStacks CASCADE;
-                DROP TABLE IF EXISTS Cards CASCADE;
-                DROP TABLE IF EXISTS Users CASCADE;
 
                 CREATE TABLE IF NOT EXISTS Users (
                     Id SERIAL PRIMARY KEY,
@@ -102,6 +94,12 @@ namespace Monster_Trading_Cards_Game.Database
                     LoserId INT REFERENCES Users(Id),
                     Log TEXT
                 );
+                CREATE TABLE IF NOT EXISTS Lobby (
+                    Id SERIAL PRIMARY KEY,
+                    UserId INT REFERENCES Users(Id) UNIQUE NOT NULL,
+                    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+
             ", connection);
                     command.ExecuteNonQuery();
                     return true;

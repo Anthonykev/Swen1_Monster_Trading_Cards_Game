@@ -21,11 +21,16 @@ namespace Monster_Trading_Cards_Game.Repositories
                 using (var connection = new NpgsqlConnection(_connectionString))
                 {
                     connection.Open();
-                    var command = new NpgsqlCommand("INSERT INTO Users (Username, Password, FullName, EMail) VALUES (@username, @password, @fullName, @email)", connection);
+                    var command = new NpgsqlCommand("INSERT INTO Users (Username, Password, FullName, EMail, Coins, Elo, Wins, Losses, TotalGames) VALUES (@username, @password, @fullName, @Email, @coins, @elo, @wins, @losses, @totalgames)", connection);
                     command.Parameters.AddWithValue("@username", username);
                     command.Parameters.AddWithValue("@password", GetPasswordHash(username, password)); // Passwort wird hier gehasht
                     command.Parameters.AddWithValue("@fullName", fullName);
-                    command.Parameters.AddWithValue("@email", email);
+                    command.Parameters.AddWithValue("@Email", email);
+                    command.Parameters.AddWithValue("@coins", 20); 
+                    command.Parameters.AddWithValue("@elo", 100); 
+                    command.Parameters.AddWithValue("@wins", 0); 
+                    command.Parameters.AddWithValue("@losses", 0); 
+                    command.Parameters.AddWithValue("@totalgames", 0); 
                     return command.ExecuteNonQuery() > 0;
                 }
             }
@@ -106,5 +111,3 @@ namespace Monster_Trading_Cards_Game.Repositories
         }
     }
 }
-
-

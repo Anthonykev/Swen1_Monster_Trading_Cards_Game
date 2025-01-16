@@ -1,0 +1,69 @@
+# Tabellen erstellen
+curl -X POST http://127.0.0.1:12000/create-tables
+
+# Standardkarten zur Datenbank hinzufügen
+curl -X POST http://127.0.0.1:12000/add-default-cards
+
+# Benutzer registrieren
+curl -X POST http://127.0.0.1:12000/register -H "Content-Type: application/json" -d "{\"username\":\"Momo11\",\"password\":\"password123\",\"fullname\":\"Test User\",\"email\":\"momo@example.com\"}"
+curl -X POST http://127.0.0.1:12000/register -H "Content-Type: application/json" -d "{\"username\":\"Momo2\",\"password\":\"password123\",\"fullname\":\"Test User\",\"email\":\"momo2@example.com\"}"
+
+# Benutzer anmelden und Token speichern
+TOKEN1=$(curl -s -X POST http://127.0.0.1:12000/login -H "Content-Type: application/json" -d "{\"username\":\"Momo11\",\"password\":\"password123\"}" | jq -r '.token')
+TOKEN2=$(curl -s -X POST http://127.0.0.1:12000/login -H "Content-Type: application/json" -d "{\"username\":\"Momo2\",\"password\":\"password123\"}" | jq -r '.token')
+
+# Pakete hinzufügen
+curl -X POST http://127.0.0.1:12000/users/Momo/stack/add-package -H "Authorization: Bearer $TOKEN1"
+curl -X POST http://127.0.0.1:12000/users/Momo2/stack/add-package -H "Authorization: Bearer $TOKEN2"
+
+# Decks auswählen
+curl -X POST http://127.0.0.1:12000/users/Momo/deck/choose -H "Authorization: Bearer $TOKEN1"
+curl -X POST http://127.0.0.1:12000/users/Momo2/deck/choose -H "Authorization: Bearer $TOKEN2"
+
+# Kampf starten
+curl -X POST http://127.0.0.1:12000/battle -H "Authorization: Bearer $TOKEN1" -d '{"opponent":"Momo2"}'
+
+# Benutzer abmelden
+curl -X POST http://127.0.0.1:12000/sessions/logout -H "Content-Type: application/json" -d "{\"token\":\"$TOKEN1\"}"
+curl -X POST http://127.0.0.1:12000/sessions/logout -H "Content-Type: application/json" -d "{\"token\":\"$TOKEN2\"}"
+
+
+
+
+
+
+
+
+
+
+
+
+@echo off
+REM Tabellen erstellen
+curl -X POST http://127.0.0.1:12000/create-tables
+
+REM Standardkarten zur Datenbank hinzufügen
+curl -X POST http://127.0.0.1:12000/add-default-cards
+
+REM Benutzer registrieren
+curl -X POST http://127.0.0.1:12000/register -H "Content-Type: application/json" -d "{\"username\":\"Momo11\",\"password\":\"password123\",\"fullname\":\"Test User\",\"email\":\"momo@example.com\"}"
+curl -X POST http://127.0.0.1:12000/register -H "Content-Type: application/json" -d "{\"username\":\"Momo2\",\"password\":\"password123\",\"fullname\":\"Test User\",\"email\":\"momo2@example.com\"}"
+
+REM Benutzer anmelden und Token speichern
+for /f "tokens=*" %%i in ('curl -s -X POST http://127.0.0.1:12000/login -H "Content-Type: application/json" -d "{\"username\":\"Momo11\",\"password\":\"password123\"}" ^| jq -r ".token"') do set TOKEN1=%%i
+for /f "tokens=*" %%i in ('curl -s -X POST http://127.0.0.1:12000/login -H "Content-Type: application/json" -d "{\"username\":\"Momo2\",\"password\":\"password123\"}" ^| jq -r ".token"') do set TOKEN2=%%i
+
+REM Pakete hinzufügen
+curl -X POST http://127.0.0.1:12000/users/Momo/stack/add-package -H "Authorization: Bearer %TOKEN1%"
+curl -X POST http://127.0.0.1:12000/users/Momo2/stack/add-package -H "Authorization: Bearer %TOKEN2%"
+
+REM Decks auswählen
+curl -X POST http://127.0.0.1:12000/users/Momo/deck/choose -H "Authorization: Bearer %TOKEN1%"
+curl -X POST http://127.0.0.1:12000/users/Momo2/deck/choose -H "Authorization: Bearer %TOKEN2%"
+
+REM Kampf starten
+curl -X POST http://127.0.0.1:12000/battle -H "Authorization: Bearer %TOKEN1%" -d "{\"opponent\":\"Momo2\"}"
+
+REM Benutzer abmelden
+curl -X POST http://127.0.0.1:12000/sessions/logout -H "Content-Type: application/json" -d "{\"token\":\"%TOKEN1%\"}"
+curl -X POST http://127.0.0.1:12000/sessions/logout -H "Content-Type: application/json" -d "{\"token\":\"%TOKEN2%\"}"

@@ -5,9 +5,11 @@ curl -X POST http://127.0.0.1:12000/add-default-cards
 #Benutzer registrieren
 curl -X POST http://127.0.0.1:12000/register -H "Content-Type: application/json" -d "{\"username\":\"Momo\",\"password\":\"password123\",\"fullname\":\"Test User\",\"email\":\"kodzo@example.com\"}" 
 curl -X POST http://127.0.0.1:12000/register -H "Content-Type: application/json" -d "{\"username\":\"Momo2\",\"password\":\"password123\",\"fullname\":\"Test User\",\"email\":\"kodzo@example.com\"}" 
-#Benutzer authentifizieren
+#Benutzer loggin
 curl -X POST http://127.0.0.1:12000/login -H "Content-Type: application/json" -d "{\"username\":\"Momo\",\"password\":\"password123\"}"
 curl -X POST http://127.0.0.1:12000/login -H "Content-Type: application/json" -d "{\"username\":\"Momo\",\"password\":\"password123\"}"
+
+
 
 
 #Pakete hinzufügen
@@ -19,3 +21,5 @@ curl -X POST http://127.0.0.1:12000/users/kodzo2/deck/choose -H "Authorization: 
 #Kampf starten
 curl -X POST http://127.0.0.1:12000/battle -H "Authorization: Bearer <token1>" -d '{"opponent":"kodzo2"}'
 
+#Logout
+curl -X POST http://127.0.0.1:12000/sessions/logout -H "Content-Type: application/json" -d "{\"token\":\"<dein-token-hier>\"}"

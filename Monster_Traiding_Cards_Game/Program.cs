@@ -2,7 +2,7 @@
 using Monster_Trading_Cards_Game.Models;
 using Monster_Trading_Cards_Game.Network;
 using Monster_Trading_Cards_Game.Interfaces;
-using Monster_Traiding_Cards.Database;
+using Monster_Trading_Cards_Game.Database;
 
 namespace Monster_Trading_Cards_Game
 {
@@ -21,9 +21,10 @@ namespace Monster_Trading_Cards_Game
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         /// <summary>Application entry point.</summary>
-        /// <param name="args">Command line arguments.</param>
+        /// <param name="args">Command line arguments.</summary>
         static void Main(string[] args)
         {
+            AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
 
             HttpSvr svr = new();
             svr.Incoming += Svr_Incoming;
@@ -35,6 +36,12 @@ namespace Monster_Trading_Cards_Game
         private static void Svr_Incoming(object sender, HttpSvrEventArgs e)
         {
             Handler.HandleEvent(e);
+        }
+        
+        private static void OnProcessExit(object? sender, EventArgs e)
+        {
+            SessionHandler.LogoutAllUsers();
+            Console.WriteLine("Alle Benutzer wurden abgemeldet.");
         }
     }
 }

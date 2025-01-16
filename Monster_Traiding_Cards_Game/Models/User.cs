@@ -58,6 +58,18 @@ namespace Monster_Trading_Cards_Game.Models
         /// <summary>Holds the current session token of the user.</summary>
         public string? SessionToken { get; set; } = null;
 
+        /// <summary>Gets or sets the user's Elo rating.</summary>
+        public int Elo { get; set; } = 100;
+
+        /// <summary>Gets or sets the user's number of wins.</summary>
+        public int Wins { get; set; } = 0;
+
+        /// <summary>Gets or sets the user's number of losses.</summary>
+        public int Losses { get; set; } = 0;
+
+        /// <summary>Gets or sets the user's total number of games.</summary>
+        public int TotalGames { get; set; } = 0;
+
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // private members                                                                                                  //
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -222,16 +234,20 @@ namespace Monster_Trading_Cards_Game.Models
             {
                 connection.Open();
                 var command = new NpgsqlCommand(@"
-                    INSERT INTO Users (UserName, FullName, EMail, Coins, Password, SessionToken)
-                    VALUES (@username, @fullname, @email, @coins, @password, @sessiontoken)
+                    INSERT INTO Users (UserName, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames)
+                    VALUES (@username, @fullname, @email, @coins, @password, @sessiontoken, @elo, @wins, @losses, @totalgames)
                     ON CONFLICT (UserName) DO UPDATE
-                    SET FullName = @fullname, EMail = @email, Coins = @coins, Password = @password, SessionToken = @sessiontoken", connection);
+                    SET FullName = @fullname, EMail = @email, Coins = @coins, Password = @password, SessionToken = @sessiontoken, Elo = @elo, Wins = @wins, Losses = @losses, TotalGames = @totalgames", connection);
                 command.Parameters.AddWithValue("@username", UserName);
                 command.Parameters.AddWithValue("@fullname", FullName);
-                command.Parameters.AddWithValue("@password", Password); // In einer echten Anwendung sollten Sie das Passwort hashen
+                command.Parameters.AddWithValue("@password", Password); 
                 command.Parameters.AddWithValue("@email", EMail);
                 command.Parameters.AddWithValue("@coins", Coins);
                 command.Parameters.AddWithValue("@sessiontoken", SessionToken ?? (object)DBNull.Value);
+                command.Parameters.AddWithValue("@elo", Elo);
+                command.Parameters.AddWithValue("@wins", Wins);
+                command.Parameters.AddWithValue("@losses", Losses);
+                command.Parameters.AddWithValue("@totalgames", TotalGames);
                 command.ExecuteNonQuery();
 
                 // Save the user's stack to the database
@@ -277,7 +293,8 @@ namespace Monster_Trading_Cards_Game.Models
                 UserName = userName,
                 Password = HashPassword(password), // Passwort hashen
                 FullName = fullName,
-                EMail = eMail
+                EMail = eMail,
+                Elo = 100 // Initial Elo rating
             };
 
             _Users.Add(user.UserName, user);
@@ -287,6 +304,7 @@ namespace Monster_Trading_Cards_Game.Models
         }
 
         /// <summary>Performs a user logon.</summary>
+
         public static (bool Success, string Token) Logon(string userName, string password)
         {
             if (_Users.ContainsKey(userName) && VerifyPassword(password, _Users[userName].Password)) // Passwort verifizieren
@@ -300,6 +318,7 @@ namespace Monster_Trading_Cards_Game.Models
             return (false, string.Empty);
         }
 
+
         public static bool Exists(string userName)
         {
             return _Users.ContainsKey(userName);
@@ -310,7 +329,7 @@ namespace Monster_Trading_Cards_Game.Models
             using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
             {
                 connection.Open();
-                var command = new NpgsqlCommand("SELECT Username, FullName, EMail, Coins, Password, SessionToken FROM Users WHERE Username = @username", connection);
+                var command = new NpgsqlCommand("SELECT Username, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames FROM Users WHERE Username = @username", connection);
                 command.Parameters.AddWithValue("@username", userName);
                 using (var reader = command.ExecuteReader())
                 {
@@ -323,7 +342,11 @@ namespace Monster_Trading_Cards_Game.Models
                             EMail = reader.GetString(2),
                             Coins = reader.GetInt32(3),
                             Password = reader.GetString(4),
-                            SessionToken = reader.IsDBNull(5) ? null : reader.GetString(5)
+                            SessionToken = reader.IsDBNull(5) ? null : reader.GetString(5),
+                            Elo = reader.GetInt32(6),
+                            Wins = reader.GetInt32(7),
+                            Losses = reader.GetInt32(8),
+                            TotalGames = reader.GetInt32(9)
                         };
                     }
                 }
@@ -345,7 +368,7 @@ namespace Monster_Trading_Cards_Game.Models
         /// <returns>The hashed password.</returns>
         private static string HashPassword(string password)
         {
-            using (var sha256 = SHA256.Create())
+            using (SHA256 sha256 = SHA256.Create())
             {
                 var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
                 return Convert.ToBase64String(hashedBytes);
