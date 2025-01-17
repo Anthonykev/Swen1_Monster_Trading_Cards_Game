@@ -126,6 +126,13 @@ namespace Monster_Trading_Cards_Game.Models
             Coins -= 5;
             Random randNames = new();
             CardRepository cardRepository = new CardRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+            PackageRepository packageRepository = new PackageRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+
+            if (!packageRepository.ArePackagesAvailable())
+            {
+                packageRepository.CreateRandomPackages(1);
+            }
+
             List<string> cardNames = cardRepository.GetCardNamesFromDatabase();
 
             for (int i = 0; i < 5; i++)
@@ -137,6 +144,7 @@ namespace Monster_Trading_Cards_Game.Models
             // Save changes to database
             new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").SaveToDatabase(this);
         }
+
 
         /// <summary>Selects the best cards from the stack to add them to the deck.</summary>
         public void ChooseDeck()
