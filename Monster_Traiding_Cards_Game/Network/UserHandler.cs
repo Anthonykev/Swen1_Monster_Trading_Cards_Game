@@ -6,7 +6,7 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Monster_Trading_Cards_Game.Repositories;
-using Monster_Trading_Cards_Game.Database; // Aktualisieren Sie den Namespace
+using Monster_Trading_Cards_Game.Database;
 
 namespace Monster_Trading_Cards_Game.Network
 {
@@ -229,7 +229,7 @@ namespace Monster_Trading_Cards_Game.Network
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Error during package purchase: {ex.Message}");
-                    e.Reply(HttpStatusCode.INTERNAL_SERVER_ERROR, new JsonObject
+                    e.Reply(HttpStatusCode.INTERNAL_SERVER_ERROR, new JsonObject()
                     {
                         ["success"] = false,
                         ["message"] = $"An unexpected error occurred: {ex.Message}"
@@ -238,9 +238,8 @@ namespace Monster_Trading_Cards_Game.Network
                 return true;
             }
 
-
-
             return false;
         }
     }
 }
+

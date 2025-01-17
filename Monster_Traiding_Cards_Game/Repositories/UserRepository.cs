@@ -116,48 +116,62 @@ namespace Monster_Trading_Cards_Game.Repositories
             using (var connection = new NpgsqlConnection(_connectionString))
             {
                 connection.Open();
-                var command = new NpgsqlCommand(@"
-                INSERT INTO Users (UserName, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames)
-                VALUES (@username, @fullname, @email, @coins, @password, @sessiontoken, @elo, @wins, @losses, @totalgames)
-                ON CONFLICT (UserName) DO UPDATE
-                SET FullName = @fullname, EMail = @email, Coins = @coins, Password = @password, SessionToken = @sessiontoken, Elo = @elo, Wins = @wins, Losses = @losses, TotalGames = @totalgames", connection);
-                command.Parameters.AddWithValue("@username", user.UserName);
-                command.Parameters.AddWithValue("@fullname", user.FullName);
-                command.Parameters.AddWithValue("@password", user.Password);
-                command.Parameters.AddWithValue("@email", user.EMail);
-                command.Parameters.AddWithValue("@coins", user.Coins);
-                command.Parameters.AddWithValue("@sessiontoken", user.SessionToken ?? (object)DBNull.Value);
-                command.Parameters.AddWithValue("@elo", user.Elo);
-                command.Parameters.AddWithValue("@wins", user.Wins);
-                command.Parameters.AddWithValue("@losses", user.Losses);
-                command.Parameters.AddWithValue("@totalgames", user.TotalGames);
-                command.ExecuteNonQuery();
-
-                // Save the user's stack to the database
-                foreach (var card in user.Stack)
+                using (var transaction = connection.BeginTransaction())
                 {
-                    var cardCommand = new NpgsqlCommand(@"
-                    INSERT INTO UserStacks (UserId, CardId)
-                    VALUES ((SELECT Id FROM Users WHERE UserName = @username), @cardid)
-                    ON CONFLICT (UserId, CardId) DO NOTHING", connection);
-                    cardCommand.Parameters.AddWithValue("@username", user.UserName);
-                    cardCommand.Parameters.AddWithValue("@cardid", card.Id);
-                    cardCommand.ExecuteNonQuery();
-                }
+                    try
+                    {
+                        // Update user information
+                        var command = new NpgsqlCommand(@"
+                    UPDATE Users SET
+                        FullName = @fullName,
+                        EMail = @eMail,
+                        Coins = @coins,
+                        Password = @password,
+                        SessionToken = @sessionToken,
+                        Elo = @elo,
+                        Wins = @wins,
+                        Losses = @losses,
+                        TotalGames = @totalGames
+                    WHERE Username = @username", connection);
+                        command.Parameters.AddWithValue("@fullName", user.FullName);
+                        command.Parameters.AddWithValue("@eMail", user.EMail);
+                        command.Parameters.AddWithValue("@coins", user.Coins);
+                        command.Parameters.AddWithValue("@password", user.Password);
+                        command.Parameters.AddWithValue("@sessionToken", user.SessionToken ?? (object)DBNull.Value);
+                        command.Parameters.AddWithValue("@elo", user.Elo);
+                        command.Parameters.AddWithValue("@wins", user.Wins);
+                        command.Parameters.AddWithValue("@losses", user.Losses);
+                        command.Parameters.AddWithValue("@totalGames", user.TotalGames);
+                        command.Parameters.AddWithValue("@username", user.UserName);
+                        command.ExecuteNonQuery();
 
-                // Save the user's deck to the database
-                foreach (var card in user.Deck)
-                {
-                    var cardCommand = new NpgsqlCommand(@"
-                    INSERT INTO UserDecks (UserId, CardId)
-                    VALUES ((SELECT Id FROM Users WHERE UserName = @username), @cardid)
-                    ON CONFLICT (UserId, CardId) DO NOTHING", connection);
-                    cardCommand.Parameters.AddWithValue("@username", user.UserName);
-                    cardCommand.Parameters.AddWithValue("@cardid", card.Id);
-                    cardCommand.ExecuteNonQuery();
+                        // Insert new cards into the user's stack
+                        foreach (var card in user.Stack)
+                        {
+                            var insertCommand = new NpgsqlCommand(@"
+                        INSERT INTO UserStacks (UserId, CardId)
+                        VALUES ((SELECT Id FROM Users WHERE Username = @username), @cardId)", connection);
+                            insertCommand.Parameters.AddWithValue("@username", user.UserName);
+                            insertCommand.Parameters.AddWithValue("@cardId", card.Id);
+                            insertCommand.ExecuteNonQuery();
+                        }
+
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        Console.WriteLine($"Error saving user to database: {ex.Message}");
+                        throw;
+                    }
                 }
             }
         }
+
+
+
+
+
 
         public void ClearDeckInDatabase(string username)
         {

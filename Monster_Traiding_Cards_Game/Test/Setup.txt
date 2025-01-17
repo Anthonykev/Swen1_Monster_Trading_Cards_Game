@@ -395,3 +395,16 @@ exit
     ```
     
 8. **PostgreSQL verlassen:**
+
+----------------------------------------------------------------------------------------------
+#Datenbank PG Admin alle Tabellen löschen:
+DROP TABLE IF EXISTS BattleRounds CASCADE;
+DROP TABLE IF EXISTS Battles CASCADE;
+DROP TABLE IF EXISTS Trades CASCADE;
+DROP TABLE IF EXISTS Lobby CASCADE;
+DROP TABLE IF EXISTS UserDecks CASCADE;
+DROP TABLE IF EXISTS UserStacks CASCADE;
+DROP TABLE IF EXISTS Packages CASCADE;
+DROP TABLE IF EXISTS Cards CASCADE;
+DROP TABLE IF EXISTS Users CASCADE;
+

@@ -144,11 +144,14 @@ namespace Monster_Trading_Cards_Game.Models
             {
                 string cardName = cardNames[randNames.Next(cardNames.Count)];
                 Stack.Add(cardRepository.CreateCard(cardName));
+                Console.WriteLine($"Added card: {cardName}");
             }
 
             // Save changes to database
             new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").SaveToDatabase(this);
+            Console.WriteLine("Package added successfully.");
         }
+
 
 
 

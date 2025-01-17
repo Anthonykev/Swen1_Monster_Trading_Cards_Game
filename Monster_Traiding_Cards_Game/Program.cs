@@ -26,12 +26,6 @@ namespace Monster_Trading_Cards_Game
         static void Main(string[] args)
         {
             AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);
-/*
-            // Create 10 random packages at startup
-            string connectionString = "Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards";
-            PackageRepository packageRepository = new PackageRepository(connectionString);
-            packageRepository.CreateRandomPackages(10);
-*/
 
             HttpSvr svr = new();
             svr.Incoming += Svr_Incoming;
@@ -57,3 +51,4 @@ namespace Monster_Trading_Cards_Game
         }
     }
 }
+

@@ -13,6 +13,11 @@ namespace Monster_Trading_Cards_Game.Network
 
         public SessionHandler()
         {
+            // Entfernen Sie den Aufruf von LoadActiveSessionsFromDatabase aus dem Konstruktor
+        }
+
+        public void Initialize()
+        {
             LoadActiveSessionsFromDatabase();
         }
 
@@ -179,3 +184,4 @@ namespace Monster_Trading_Cards_Game.Network
         }
     }
 }
+
