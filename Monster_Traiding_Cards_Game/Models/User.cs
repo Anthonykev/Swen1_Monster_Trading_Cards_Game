@@ -104,17 +104,16 @@ namespace Monster_Trading_Cards_Game.Models
         /// <summary>Checks if the user is authenticated.</summary>
         /// <param name="token">Token of the session trying to perform the action.</param>
         /// <returns>True if the user is authenticated, otherwise false.</returns>
-        public bool IsAuthenticated(string token)
+        public bool IsAuthenticated(string username, string token)
         {
-            (bool Success, User? User) auth = Token.Authenticate(token);
-            return auth.Success && auth.User!.UserName == UserName;
+            return UserName == username && SessionToken == token;
         }
 
         /// <summary>Allows the user to buy a package of 5 cards.</summary>
 
-        public void AddPackage(string token)
+        public void AddPackage(string username, string token)
         {
-            if (!IsAuthenticated(token))
+            if (!IsAuthenticated(username, token))
             {
                 throw new AuthenticationException("User is not authenticated.");
             }
@@ -150,6 +149,7 @@ namespace Monster_Trading_Cards_Game.Models
             // Save changes to database
             new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").SaveToDatabase(this);
         }
+
 
 
         /// <summary>Selects the best cards from the stack to add them to the deck.</summary>

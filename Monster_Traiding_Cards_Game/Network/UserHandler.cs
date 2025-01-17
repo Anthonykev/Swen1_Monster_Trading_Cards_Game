@@ -218,7 +218,7 @@ namespace Monster_Trading_Cards_Game.Network
                         return true;
                     }
 
-                    user.AddPackage(token);
+                    user.AddPackage(username, token);
 
                     e.Reply(HttpStatusCode.OK, new JsonObject
                     {
@@ -237,6 +237,7 @@ namespace Monster_Trading_Cards_Game.Network
                 }
                 return true;
             }
+
 
 
             return false;
