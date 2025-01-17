@@ -204,13 +204,16 @@ namespace Monster_Trading_Cards_Game.Network
                         return true;
                     }
 
-                    User? user = User.Get(username);
+                    Console.WriteLine($"Received request to buy package for user: {username} with token: {token}");
+
+                    User? user = User.GetByUsernameAndToken(username, token);
                     if (user == null)
                     {
-                        e.Reply(HttpStatusCode.BAD_REQUEST, new JsonObject
+                        Console.WriteLine($"User not found or invalid token: {username}");
+                        e.Reply(HttpStatusCode.UNAUTHORIZED, new JsonObject
                         {
                             ["success"] = false,
-                            ["message"] = "User not found."
+                            ["message"] = "Invalid username or token."
                         }.ToJsonString());
                         return true;
                     }
@@ -225,14 +228,16 @@ namespace Monster_Trading_Cards_Game.Network
                 }
                 catch (Exception ex)
                 {
+                    Console.WriteLine($"Error during package purchase: {ex.Message}");
                     e.Reply(HttpStatusCode.INTERNAL_SERVER_ERROR, new JsonObject
                     {
                         ["success"] = false,
-                        ["message"] = "An unexpected error occurred."
+                        ["message"] = $"An unexpected error occurred: {ex.Message}"
                     }.ToJsonString());
                 }
                 return true;
             }
+
 
             return false;
         }

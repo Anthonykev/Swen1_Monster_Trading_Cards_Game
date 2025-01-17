@@ -111,6 +111,7 @@ namespace Monster_Trading_Cards_Game.Models
         }
 
         /// <summary>Allows the user to buy a package of 5 cards.</summary>
+
         public void AddPackage(string token)
         {
             if (!IsAuthenticated(token))
@@ -128,9 +129,14 @@ namespace Monster_Trading_Cards_Game.Models
             CardRepository cardRepository = new CardRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
             PackageRepository packageRepository = new PackageRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
 
+            // Check if there are any packages in the database, if not create 10 random packages
             if (!packageRepository.ArePackagesAvailable())
             {
-                packageRepository.CreateRandomPackages(1);
+                packageRepository.CreateRandomPackages(10);
+            }
+            else if (packageRepository.GetPackageCount() <= 5)
+            {
+                packageRepository.CreateRandomPackages(5);
             }
 
             List<string> cardNames = cardRepository.GetCardNamesFromDatabase();
@@ -258,5 +264,44 @@ namespace Monster_Trading_Cards_Game.Models
             var hashOfInput = HashPassword(password);
             return hashOfInput == hashedPassword;
         }
+
+        public static User? GetByUsernameAndToken(string username, string token)
+        {
+            try
+            {
+                using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
+                {
+                    connection.Open();
+                    var command = new NpgsqlCommand("SELECT Username, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames FROM Users WHERE Username = @username AND SessionToken = @token", connection);
+                    command.Parameters.AddWithValue("@username", username);
+                    command.Parameters.AddWithValue("@token", token);
+                    using (var reader = command.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            return new User
+                            {
+                                UserName = reader.GetString(0),
+                                FullName = reader.GetString(1),
+                                EMail = reader.GetString(2),
+                                Coins = reader.GetInt32(3),
+                                Password = reader.GetString(4),
+                                SessionToken = reader.IsDBNull(5) ? null : reader.GetString(5),
+                                Elo = reader.GetInt32(6),
+                                Wins = reader.GetInt32(7),
+                                Losses = reader.GetInt32(8),
+                                TotalGames = reader.GetInt32(9)
+                            };
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting user by username and token: {ex.Message}");
+            }
+            return null;
+        }
+
     }
 }

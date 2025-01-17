@@ -96,5 +96,25 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
             return cardIds;
         }
+        public int GetPackageCount()
+        {
+            try
+            {
+                using (var connection = new NpgsqlConnection(_connectionString))
+                {
+                    connection.Open();
+                    var command = new NpgsqlCommand("SELECT COUNT(*) FROM Packages", connection);
+                    var count = (long)command.ExecuteScalar();
+                    return (int)count;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting package count: {ex.Message}");
+                return 0;
+            }
+        }
+
+
     }
 }
