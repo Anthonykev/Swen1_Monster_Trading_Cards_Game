@@ -47,6 +47,59 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
         }
 
+        public bool CreateUserWithFixedToken(string username, string password, string fullName, string email, string fixedToken)
+        {
+            try
+            {
+                using (var connection = new NpgsqlConnection(_connectionString))
+                {
+                    connection.Open();
+                    var command = new NpgsqlCommand("INSERT INTO Users (Username, Password, FullName, EMail, Coins, Elo, Wins, Losses, TotalGames, SessionToken) VALUES (@username, @password, @fullName, @Email, @coins, @elo, @wins, @losses, @totalgames, @sessionToken)", connection);
+                    command.Parameters.AddWithValue("@username", username);
+                    command.Parameters.AddWithValue("@password", GetPasswordHash(username, password)); // Passwort wird hier gehasht
+                    command.Parameters.AddWithValue("@fullName", fullName);
+                    command.Parameters.AddWithValue("@Email", email);
+                    command.Parameters.AddWithValue("@coins", 20);
+                    command.Parameters.AddWithValue("@elo", 100);
+                    command.Parameters.AddWithValue("@wins", 0);
+                    command.Parameters.AddWithValue("@losses", 0);
+                    command.Parameters.AddWithValue("@totalgames", 0);
+                    command.Parameters.AddWithValue("@sessionToken", fixedToken);
+                    return command.ExecuteNonQuery() > 0;
+                }
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23505")
+            {
+                Console.WriteLine($"Duplicate username detected: {username}. Error: {ex.Message}");
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error: {ex.Message}");
+                return false;
+            }
+        }
+
+        public bool UserExists(string username)
+        {
+            try
+            {
+                using (var connection = new NpgsqlConnection(_connectionString))
+                {
+                    connection.Open();
+                    var command = new NpgsqlCommand("SELECT COUNT(*) FROM Users WHERE Username = @username", connection);
+                    command.Parameters.AddWithValue("@username", username);
+                    var count = (long)command.ExecuteScalar();
+                    return count > 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error checking if user exists: {ex.Message}");
+                return false;
+            }
+        }
+
         public (bool Success, string Token) AuthenticateUser(string username, string password)
         {
             try
@@ -54,19 +107,28 @@ namespace Monster_Trading_Cards_Game.Repositories
                 using (var connection = new NpgsqlConnection(_connectionString))
                 {
                     connection.Open();
-                    var command = new NpgsqlCommand("SELECT Id, Password FROM Users WHERE Username = @username", connection);
+                    var command = new NpgsqlCommand("SELECT Id, Password, SessionToken FROM Users WHERE Username = @username", connection);
                     command.Parameters.AddWithValue("@username", username);
                     using (var reader = command.ExecuteReader())
                     {
                         if (reader.Read())
                         {
                             var storedPassword = reader.GetString(1);
+                            var sessionToken = reader.GetString(2);
                             if (storedPassword == GetPasswordHash(username, password)) // Passwort wird hier verifiziert
                             {
                                 var userId = reader.GetInt32(0);
-                                var token = Guid.NewGuid().ToString(); // Generieren eines einfachen Tokens
-                                UpdateUserToken(userId, token);
-                                return (true, token);
+                                if (sessionToken.StartsWith("fixed-token-"))
+                                {
+                                    // Fester Token, nicht ändern
+                                    return (true, sessionToken);
+                                }
+                                else
+                                {
+                                    var token = Guid.NewGuid().ToString(); // Generieren eines einfachen Tokens
+                                    UpdateUserToken(userId, token);
+                                    return (true, token);
+                                }
                             }
                         }
                     }
@@ -86,7 +148,7 @@ namespace Monster_Trading_Cards_Game.Repositories
                 using (var connection = new NpgsqlConnection(_connectionString))
                 {
                     connection.Open();
-                    var command = new NpgsqlCommand("UPDATE Users SET SessionToken = @token WHERE Id = @userId", connection);
+                    var command = new NpgsqlCommand("UPDATE Users SET SessionToken = @token WHERE Id = @userId AND SessionToken NOT LIKE 'fixed-token-%'", connection);
                     command.Parameters.AddWithValue("@token", token);
                     command.Parameters.AddWithValue("@userId", userId);
                     command.ExecuteNonQuery();
@@ -168,11 +230,6 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
         }
 
-
-
-
-
-
         public void ClearDeckInDatabase(string username)
         {
             using (var connection = new NpgsqlConnection(_connectionString))
@@ -239,5 +296,4 @@ namespace Monster_Trading_Cards_Game.Repositories
             throw new Exception("Card not found in database");
         }
     }
-
 }

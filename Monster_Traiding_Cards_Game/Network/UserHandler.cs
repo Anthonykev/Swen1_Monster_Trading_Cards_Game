@@ -237,6 +237,31 @@ namespace Monster_Trading_Cards_Game.Network
                 }
                 return true;
             }
+            else if ((e.Path.TrimEnd('/', ' ', '\t') == "/seed-users") && (e.Method == "POST"))
+            {
+                try
+                {
+                    SeedUsers.Seed(_userRepository);
+                    status = HttpStatusCode.OK;
+                    reply = new JsonObject()
+                    {
+                        ["success"] = true,
+                        ["message"] = "Benutzer mit festen Tokens wurden erstellt."
+                    };
+                }
+                catch (Exception ex)
+                {
+                    status = HttpStatusCode.INTERNAL_SERVER_ERROR;
+                    reply = new JsonObject()
+                    {
+                        ["success"] = false,
+                        ["message"] = $"Fehler beim Erstellen der Benutzer: {ex.Message}"
+                    };
+                }
+
+                e.Reply(status, reply?.ToJsonString());
+                return true;
+            }
 
             return false;
         }
