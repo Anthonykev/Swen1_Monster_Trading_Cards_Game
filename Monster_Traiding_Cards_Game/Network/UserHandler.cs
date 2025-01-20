@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Monster_Trading_Cards_Game.Repositories;
 using Monster_Trading_Cards_Game.Database;
+using Monster_Traiding_Cards.Repositories;
 
 namespace Monster_Trading_Cards_Game.Network
 {
@@ -262,6 +263,65 @@ namespace Monster_Trading_Cards_Game.Network
                 e.Reply(status, reply?.ToJsonString());
                 return true;
             }
+            else if ((e.Path.TrimEnd('/', ' ', '\t') == "/battle-request") && (e.Method == "POST"))
+            {
+                try
+                {
+                    JsonNode? json = JsonNode.Parse(e.Payload);
+                    string? token = json?["token"]?.ToString();
+                    string? username = json?["username"]?.ToString();
+
+                    if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(username))
+                    {
+                        e.Reply(HttpStatusCode.BAD_REQUEST, new JsonObject
+                        {
+                            ["success"] = false,
+                            ["message"] = "Missing token or username."
+                        }.ToJsonString());
+                        return true;
+                    }
+
+                    User? user = User.GetByUsernameAndToken(username, token);
+                    if (user == null)
+                    {
+                        e.Reply(HttpStatusCode.UNAUTHORIZED, new JsonObject
+                        {
+                            ["success"] = false,
+                            ["message"] = "Invalid username or token."
+                        }.ToJsonString());
+                        return true;
+                    }
+
+                    var lobbyRepository = new LobbyRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+                    if (lobbyRepository.AddUserToLobby(username, token))
+                    {
+                        e.Reply(HttpStatusCode.OK, new JsonObject
+                        {
+                            ["success"] = true,
+                            ["message"] = "User added to lobby successfully."
+                        }.ToJsonString());
+                    }
+                    else
+                    {
+                        e.Reply(HttpStatusCode.BAD_REQUEST, new JsonObject
+                        {
+                            ["success"] = false,
+                            ["message"] = "User is already in the lobby."
+                        }.ToJsonString());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    e.Reply(HttpStatusCode.INTERNAL_SERVER_ERROR, new JsonObject()
+                    {
+                        ["success"] = false,
+                        ["message"] = $"An unexpected error occurred: {ex.Message}"
+                    }.ToJsonString());
+                }
+                return true;
+            }
+
+
 
             return false;
         }

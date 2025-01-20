@@ -35,6 +35,9 @@ namespace Monster_Trading_Cards_Game.Models
         // public properties                                                                                                //
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+        /// <summary>Gets the user ID.</summary>
+        public int Id { get; private set; }
+
         /// <summary>Gets the user name.</summary>
         public string UserName { get; private set; } = string.Empty;
 
@@ -152,12 +155,14 @@ namespace Monster_Trading_Cards_Game.Models
             Console.WriteLine("Package added successfully.");
         }
 
-
-
-
         /// <summary>Selects the best cards from the stack to add them to the deck.</summary>
-        public void ChooseDeck()
+        public void ChooseDeck(string username, string token)
         {
+            if (!IsAuthenticated(username, token))
+            {
+                throw new AuthenticationException("User is not authenticated.");
+            }
+
             // Clear the current deck in the database
             new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").ClearDeckInDatabase(UserName);
 
@@ -177,8 +182,13 @@ namespace Monster_Trading_Cards_Game.Models
         }
 
         /// <summary>Returns all cards from the deck to the stack.</summary>
-        public void ReturnDeckToStack()
+        public void ReturnDeckToStack(string username, string token)
         {
+            if (!IsAuthenticated(username, token))
+            {
+                throw new AuthenticationException("User is not authenticated.");
+            }
+
             Stack.AddRange(Deck);
             Deck.Clear();
             new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").SaveToDatabase(this);
@@ -212,7 +222,7 @@ namespace Monster_Trading_Cards_Game.Models
             using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
             {
                 connection.Open();
-                var command = new NpgsqlCommand("SELECT Username, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames FROM Users WHERE Username = @username", connection);
+                var command = new NpgsqlCommand("SELECT Id, Username, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames FROM Users WHERE Username = @username", connection);
                 command.Parameters.AddWithValue("@username", userName);
                 using (var reader = command.ExecuteReader())
                 {
@@ -220,16 +230,48 @@ namespace Monster_Trading_Cards_Game.Models
                     {
                         return new User
                         {
-                            UserName = reader.GetString(0),
-                            FullName = reader.GetString(1),
-                            EMail = reader.GetString(2),
-                            Coins = reader.GetInt32(3),
-                            Password = reader.GetString(4),
-                            SessionToken = reader.IsDBNull(5) ? null : reader.GetString(5),
-                            Elo = reader.GetInt32(6),
-                            Wins = reader.GetInt32(7),
-                            Losses = reader.GetInt32(8),
-                            TotalGames = reader.GetInt32(9)
+                            Id = reader.GetInt32(0),
+                            UserName = reader.GetString(1),
+                            FullName = reader.GetString(2),
+                            EMail = reader.GetString(3),
+                            Coins = reader.GetInt32(4),
+                            Password = reader.GetString(5),
+                            SessionToken = reader.IsDBNull(6) ? null : reader.GetString(6),
+                            Elo = reader.GetInt32(7),
+                            Wins = reader.GetInt32(8),
+                            Losses = reader.GetInt32(9),
+                            TotalGames = reader.GetInt32(10)
+                        };
+                    }
+                }
+            }
+            return null;
+        }
+
+        public static User? GetById(int userId)
+        {
+            using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
+            {
+                connection.Open();
+                var command = new NpgsqlCommand("SELECT Id, Username, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames FROM Users WHERE Id = @userId", connection);
+                command.Parameters.AddWithValue("@userId", userId);
+                using (var reader = command.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        return new User
+                        {
+                            Id = reader.GetInt32(0),
+                            UserName = reader.GetString(1),
+                            FullName = reader.GetString(2),
+                            EMail = reader.GetString(3),
+                            Coins = reader.GetInt32(4),
+                            Password = reader.GetString(5),
+                            SessionToken = reader.IsDBNull(6) ? null : reader.GetString(6),
+                            Elo = reader.GetInt32(7),
+                            Wins = reader.GetInt32(8),
+                            Losses = reader.GetInt32(9),
+                            TotalGames = reader.GetInt32(10)
                         };
                     }
                 }
@@ -275,7 +317,7 @@ namespace Monster_Trading_Cards_Game.Models
                 using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
                 {
                     connection.Open();
-                    var command = new NpgsqlCommand("SELECT Username, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames FROM Users WHERE Username = @username AND SessionToken = @token", connection);
+                    var command = new NpgsqlCommand("SELECT Id, Username, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames FROM Users WHERE Username = @username AND SessionToken = @token", connection);
                     command.Parameters.AddWithValue("@username", username);
                     command.Parameters.AddWithValue("@token", token);
                     using (var reader = command.ExecuteReader())
@@ -284,16 +326,17 @@ namespace Monster_Trading_Cards_Game.Models
                         {
                             return new User
                             {
-                                UserName = reader.GetString(0),
-                                FullName = reader.GetString(1),
-                                EMail = reader.GetString(2),
-                                Coins = reader.GetInt32(3),
-                                Password = reader.GetString(4),
-                                SessionToken = reader.IsDBNull(5) ? null : reader.GetString(5),
-                                Elo = reader.GetInt32(6),
-                                Wins = reader.GetInt32(7),
-                                Losses = reader.GetInt32(8),
-                                TotalGames = reader.GetInt32(9)
+                                Id = reader.GetInt32(0),
+                                UserName = reader.GetString(1),
+                                FullName = reader.GetString(2),
+                                EMail = reader.GetString(3),
+                                Coins = reader.GetInt32(4),
+                                Password = reader.GetString(5),
+                                SessionToken = reader.IsDBNull(6) ? null : reader.GetString(6),
+                                Elo = reader.GetInt32(7),
+                                Wins = reader.GetInt32(8),
+                                Losses = reader.GetInt32(9),
+                                TotalGames = reader.GetInt32(10)
                             };
                         }
                     }
@@ -305,6 +348,7 @@ namespace Monster_Trading_Cards_Game.Models
             }
             return null;
         }
-
     }
 }
+
+

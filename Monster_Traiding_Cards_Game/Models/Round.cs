@@ -26,19 +26,22 @@ namespace Monster_Trading_Cards_Game.Models
         public void Play()
         {
             // Assuming both players play with their decks
-            int player1TotalDamage = Player1.Deck.Sum(card => card.Damage);
-            int player2TotalDamage = Player2.Deck.Sum(card => card.Damage);
+            var player1Card = Player1.Deck.First();
+            var player2Card = Player2.Deck.First();
 
-            Console.WriteLine($"{Player1.UserName} total damage: {player1TotalDamage}");
-            Console.WriteLine($"{Player2.UserName} total damage: {player2TotalDamage}");
+            double player1Damage = player1Card.CalculateDamage(player2Card);
+            double player2Damage = player2Card.CalculateDamage(player1Card);
 
-            if (player1TotalDamage > player2TotalDamage)
+            Console.WriteLine($"{Player1.UserName} plays {player1Card.Name} with damage {player1Damage}");
+            Console.WriteLine($"{Player2.UserName} plays {player2Card.Name} with damage {player2Damage}");
+
+            if (player1Damage > player2Damage)
             {
                 Winner = Player1;
                 Console.WriteLine($"Round winner: {Player1.UserName}");
                 TransferCard(Player2, Player1);
             }
-            else if (player2TotalDamage > player1TotalDamage)
+            else if (player2Damage > player1Damage)
             {
                 Winner = Player2;
                 Console.WriteLine($"Round winner: {Player2.UserName}");
@@ -49,6 +52,10 @@ namespace Monster_Trading_Cards_Game.Models
                 Winner = null; // Unentschieden
                 Console.WriteLine("The round ended in a draw.");
             }
+
+            // Remove the played cards from the decks
+            Player1.Deck.Remove(player1Card);
+            Player2.Deck.Remove(player2Card);
         }
 
         /// <summary>Transfers a card from the loser to the winner.</summary>
@@ -63,4 +70,3 @@ namespace Monster_Trading_Cards_Game.Models
         }
     }
 }
-

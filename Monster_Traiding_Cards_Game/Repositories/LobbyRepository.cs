@@ -1,6 +1,7 @@
 ﻿using Npgsql;
 using System;
 using Monster_Trading_Cards_Game.Repositories;
+using Monster_Trading_Cards_Game.Models;
 
 namespace Monster_Traiding_Cards.Repositories
 {
@@ -15,7 +16,7 @@ namespace Monster_Traiding_Cards.Repositories
             _battleRepository = new BattleRepository(connectionString);
         }
 
-        public bool AddUserToLobby(int userId)
+        public bool AddUserToLobby(string username, string token)
         {
             try
             {
@@ -23,9 +24,16 @@ namespace Monster_Traiding_Cards.Repositories
                 {
                     connection.Open();
 
+                    // Benutzer-Objekt abrufen
+                    var user = User.Get(username);
+                    if (user == null)
+                    {
+                        throw new Exception("User not found");
+                    }
+
                     // Überprüfen, ob der Benutzer bereits in der Lobby ist
                     var checkCommand = new NpgsqlCommand("SELECT COUNT(*) FROM Lobby WHERE UserId = @UserId", connection);
-                    checkCommand.Parameters.AddWithValue("UserId", userId);
+                    checkCommand.Parameters.AddWithValue("UserId", user.Id);
                     var count = (long)checkCommand.ExecuteScalar();
 
                     if (count > 0)
@@ -35,8 +43,11 @@ namespace Monster_Traiding_Cards.Repositories
 
                     // Benutzer zur Lobby hinzufügen
                     var insertCommand = new NpgsqlCommand("INSERT INTO Lobby (UserId) VALUES (@UserId)", connection);
-                    insertCommand.Parameters.AddWithValue("UserId", userId);
+                    insertCommand.Parameters.AddWithValue("UserId", user.Id);
                     insertCommand.ExecuteNonQuery();
+
+                    // Deck auswählen
+                    user.ChooseDeck(username, token);
 
                     // Überprüfen, ob zwei Benutzer in der Lobby sind
                     var lobbyCountCommand = new NpgsqlCommand("SELECT COUNT(*) FROM Lobby", connection);
@@ -77,11 +88,16 @@ namespace Monster_Traiding_Cards.Repositories
                 }
                 reader.Close();
 
-                // Battle-Eintrag erstellen
-                var battleCreated = _battleRepository.AddBattle(user1Id, user2Id, 0, 0); // WinnerId und LoserId sind 0, da der Battle noch nicht entschieden ist
+                // Benutzer-Objekte abrufen
+                var player1 = User.GetById(user1Id);
+                var player2 = User.GetById(user2Id);
 
-                if (battleCreated)
+                if (player1 != null && player2 != null)
                 {
+                    // Battle starten
+                    var battle = new Battle(player1, player2);
+                    battle.Start();
+
                     // Benutzer aus der Lobby entfernen
                     var deleteCommand = new NpgsqlCommand("DELETE FROM Lobby WHERE UserId = @User1Id OR UserId = @User2Id", connection);
                     deleteCommand.Parameters.AddWithValue("User1Id", user1Id);
