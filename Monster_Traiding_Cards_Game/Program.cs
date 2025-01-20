@@ -30,6 +30,10 @@ namespace Monster_Trading_Cards_Game
             HttpSvr svr = new();
             svr.Incoming += Svr_Incoming;
 
+            // Initialisieren Sie den SessionHandler
+            SessionHandler sessionHandler = new();
+            sessionHandler.Initialize();
+
             svr.Run();
             Console.WriteLine("Server läuft auf http://127.0.0.1:12000");
         }
@@ -41,14 +45,16 @@ namespace Monster_Trading_Cards_Game
 
         private static void OnProcessExit(object? sender, EventArgs e)
         {
-            // Delete all packages on exit
-            string connectionString = "Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards";
-            PackageRepository packageRepository = new PackageRepository(connectionString);
-            packageRepository.DeleteAllPackages();
-
-            SessionHandler.LogoutAllUsers();
-            Console.WriteLine("Alle Benutzer wurden abgemeldet.");
+            try
+            {
+                SessionHandler.LogoutAllUsers();
+                Console.WriteLine("Alle Benutzer wurden abgemeldet.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Fehler beim Abmelden aller Benutzer: {ex.Message}");
+            }
         }
+
     }
 }
-

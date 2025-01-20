@@ -34,28 +34,28 @@ namespace Monster_Trading_Cards_Game.Repositories
 
                     // Karten sind nicht vorhanden, Standardkarten hinzufügen
                     var command = new NpgsqlCommand(@"
-                        INSERT INTO Cards (Name, Type, Damage, ElementType) VALUES
-                        ('Dragons', 'Monster-Card', 70, 'Fire'),
-                        ('FireElves', 'Monster-Card', 70, 'Fire'),
-                        ('Amaterasu', 'Spell-Card', 70, 'Fire'),
-                        ('Raijin', 'Spell-Card', 70, 'Fire'),
-                        ('Tetsu', 'Monster-Card', 70, 'Fire'),
-                        ('Kraken', 'Monster-Card', 70, 'Water'),
-                        ('DogMike', 'Monster-Card', 70, 'Water'),
-                        ('Susanoo', 'Spell-Card', 70, 'Water'),
-                        ('Bankai', 'Spell-Card', 70, 'Water'),
-                        ('Wizzard', 'Spell-Card', 70, 'Water'),
-                        ('Goblins', 'Monster-Card', 50, 'Normal'),
-                        ('Knights', 'Monster-Card', 50, 'Normal'),
-                        ('Orks', 'Monster-Card', 50, 'Normal'),
-                        ('Rocklee', 'Monster-Card', 50, 'Normal'),
-                        ('FighterKevin', 'Monster-Card', 50, 'Normal'),
-                        ('Inferno', 'Spell-Card', 70, 'Fire'),
-                        ('Tsunami', 'Spell-Card', 70, 'Water'),
-                        ('Earthquake', 'Spell-Card', 50, 'Normal'),
-                        ('Blizzard', 'Spell-Card', 70, 'Water'),
-                        ('Lightning', 'Spell-Card', 70, 'Fire')
-                        ON CONFLICT (Name) DO NOTHING", connection);
+                    INSERT INTO Cards (Name, Type, Damage, ElementType) VALUES
+                    ('Dragons', 'Monster-Card', 70, 'Fire'),
+                    ('FireElves', 'Monster-Card', 70, 'Fire'),
+                    ('Amaterasu', 'Spell-Card', 70, 'Fire'),
+                    ('Raijin', 'Spell-Card', 70, 'Fire'),
+                    ('Tetsu', 'Monster-Card', 70, 'Fire'),
+                    ('Kraken', 'Monster-Card', 70, 'Water'),
+                    ('DogMike', 'Monster-Card', 70, 'Water'),
+                    ('Susanoo', 'Spell-Card', 70, 'Water'),
+                    ('Bankai', 'Spell-Card', 70, 'Water'),
+                    ('Wizzard', 'Spell-Card', 70, 'Water'),
+                    ('Goblins', 'Monster-Card', 50, 'Normal'),
+                    ('Knights', 'Monster-Card', 50, 'Normal'),
+                    ('Orks', 'Monster-Card', 50, 'Normal'),
+                    ('Rocklee', 'Monster-Card', 50, 'Normal'),
+                    ('FighterKevin', 'Monster-Card', 50, 'Normal'),
+                    ('Inferno', 'Spell-Card', 70, 'Fire'),
+                    ('Tsunami', 'Spell-Card', 70, 'Water'),
+                    ('Earthquake', 'Spell-Card', 50, 'Normal'),
+                    ('Blizzard', 'Spell-Card', 70, 'Water'),
+                    ('Lightning', 'Spell-Card', 70, 'Fire')
+                    ON CONFLICT (Name) DO NOTHING", connection);
                     command.ExecuteNonQuery();
                     return true;
                 }
@@ -67,31 +67,15 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
         }
 
-        public List<string> GetCardNamesFromDatabase()
-        {
-            List<string> cardNames = new();
-            using (var connection = new NpgsqlConnection(_connectionString))
-            {
-                connection.Open();
-                var command = new NpgsqlCommand("SELECT Name FROM Cards", connection);
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        cardNames.Add(reader.GetString(0));
-                    }
-                }
-            }
-            return cardNames;
-        }
-
-        public Card CreateCard(string cardName)
+  
+       
+        public Card? GetCardById(int cardId)
         {
             using (var connection = new NpgsqlConnection(_connectionString))
             {
                 connection.Open();
-                var command = new NpgsqlCommand("SELECT Id, Name, Damage, ElementType, Type FROM Cards WHERE Name = @name", connection);
-                command.Parameters.AddWithValue("@name", cardName);
+                var command = new NpgsqlCommand("SELECT Id, Name, Damage, ElementType, Type FROM Cards WHERE Id = @id", connection);
+                command.Parameters.AddWithValue("@id", cardId);
                 using (var reader = command.ExecuteReader())
                 {
                     if (reader.Read())
@@ -117,7 +101,8 @@ namespace Monster_Trading_Cards_Game.Repositories
                     }
                 }
             }
-            throw new Exception("Card not found in database");
+            return null;
         }
     }
+
 }

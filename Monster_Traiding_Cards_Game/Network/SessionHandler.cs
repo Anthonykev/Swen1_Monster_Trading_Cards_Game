@@ -66,13 +66,14 @@ namespace Monster_Trading_Cards_Game.Network
                         }
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     reply = new JsonObject()
                     {
                         ["success"] = false,
                         ["message"] = "Invalid request."
                     };
+                    Console.WriteLine($"Error handling login request: {ex.Message}");
                 }
 
                 e.Reply(status, reply?.ToJsonString());
@@ -125,13 +126,14 @@ namespace Monster_Trading_Cards_Game.Network
                         }
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     reply = new JsonObject()
                     {
                         ["success"] = false,
                         ["message"] = "Invalid request."
                     };
+                    Console.WriteLine($"Error handling logout request: {ex.Message}");
                 }
 
                 e.Reply(status, reply?.ToJsonString());
@@ -143,45 +145,80 @@ namespace Monster_Trading_Cards_Game.Network
 
         public static void LogoutAllUsers()
         {
-            using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
+            int retryCount = 3;
+            while (retryCount > 0)
             {
-                connection.Open();
-                var command = new NpgsqlCommand("UPDATE Users SET SessionToken = NULL WHERE SessionToken IS NOT NULL", connection);
-                command.ExecuteNonQuery();
-            }
-            ActiveSessions.Clear();
-        }
-
-        private static void LoadActiveSessionsFromDatabase()
-        {
-            using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
-            {
-                connection.Open();
-                var command = new NpgsqlCommand("SELECT Username, SessionToken FROM Users WHERE SessionToken IS NOT NULL", connection);
-
-                using (var reader = command.ExecuteReader())
+                try
                 {
-                    while (reader.Read())
+                    using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
                     {
-                        string username = reader.GetString(0);
-                        string token = reader.GetString(1);
-                        ActiveSessions[token] = username;
+                        connection.Open();
+                        using (var transaction = connection.BeginTransaction())
+                        {
+                            var command = new NpgsqlCommand("UPDATE Users SET SessionToken = NULL WHERE SessionToken IS NOT NULL", connection, transaction);
+                            command.ExecuteNonQuery();
+                            transaction.Commit();
+                        }
+                    }
+                    ActiveSessions.Clear();
+                    Console.WriteLine("All users have been logged out.");
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    retryCount--;
+                    Console.WriteLine($"Error logging out all users: {ex.Message}. Retries left: {retryCount}");
+                    if (retryCount == 0)
+                    {
+                        throw;
                     }
                 }
             }
         }
 
+        private static void LoadActiveSessionsFromDatabase()
+        {
+            try
+            {
+                using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
+                {
+                    connection.Open();
+                    var command = new NpgsqlCommand("SELECT Username, SessionToken FROM Users WHERE SessionToken IS NOT NULL", connection);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            string username = reader.GetString(0);
+                            string token = reader.GetString(1);
+                            ActiveSessions[token] = username;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading active sessions from database: {ex.Message}");
+            }
+        }
+
         private static void UpdateUserTokenInDatabase(string token, string? newToken)
         {
-            using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
+            try
             {
-                connection.Open();
-                var command = new NpgsqlCommand("UPDATE Users SET SessionToken = @newToken WHERE SessionToken = @token", connection);
-                command.Parameters.AddWithValue("@newToken", (object?)newToken ?? DBNull.Value);
-                command.Parameters.AddWithValue("@token", token);
-                command.ExecuteNonQuery();
+                using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
+                {
+                    connection.Open();
+                    var command = new NpgsqlCommand("UPDATE Users SET SessionToken = @newToken WHERE SessionToken = @token", connection);
+                    command.Parameters.AddWithValue("@newToken", (object?)newToken ?? DBNull.Value);
+                    command.Parameters.AddWithValue("@token", token);
+                    command.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating user token in database: {ex.Message}");
             }
         }
     }
 }
-

@@ -11,7 +11,6 @@ namespace Monster_Trading_Cards_Game.Database
         {
             _connectionString = connectionString;
         }
-
         public bool Execute_CreateTables()
         {
             try
@@ -112,6 +111,7 @@ namespace Monster_Trading_Cards_Game.Database
                 return false;
             }
         }
+
 
     }
 }
