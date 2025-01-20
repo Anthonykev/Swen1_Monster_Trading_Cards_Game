@@ -160,17 +160,17 @@ namespace Monster_Trading_Cards_Game.Repositories
                     {
                         // Update user information
                         var command = new NpgsqlCommand(@"
-                    UPDATE Users SET
-                        FullName = @fullName,
-                        EMail = @eMail,
-                        Coins = @coins,
-                        Password = @password,
-                        SessionToken = @sessionToken,
-                        Elo = @elo,
-                        Wins = @wins,
-                        Losses = @losses,
-                        TotalGames = @totalGames
-                    WHERE Username = @username", connection);
+                UPDATE Users SET
+                    FullName = @fullName,
+                    EMail = @eMail,
+                    Coins = @coins,
+                    Password = @password,
+                    SessionToken = @sessionToken,
+                    Elo = @elo,
+                    Wins = @wins,
+                    Losses = @losses,
+                    TotalGames = @totalGames
+                WHERE Username = @username", connection);
                         command.Parameters.AddWithValue("@fullName", user.FullName);
                         command.Parameters.AddWithValue("@eMail", user.EMail);
                         command.Parameters.AddWithValue("@coins", user.Coins);
@@ -183,17 +183,6 @@ namespace Monster_Trading_Cards_Game.Repositories
                         command.Parameters.AddWithValue("@username", user.UserName);
                         command.ExecuteNonQuery();
 
-                        // Insert new cards into the user's stack
-                        foreach (var card in user.Stack)
-                        {
-                            var insertCommand = new NpgsqlCommand(@"
-                        INSERT INTO UserStacks (UserId, CardId)
-                        VALUES ((SELECT Id FROM Users WHERE Username = @username), @cardId)", connection);
-                            insertCommand.Parameters.AddWithValue("@username", user.UserName);
-                            insertCommand.Parameters.AddWithValue("@cardId", card.Id);
-                            insertCommand.ExecuteNonQuery();
-                        }
-
                         transaction.Commit();
                     }
                     catch (Exception ex)
@@ -205,6 +194,7 @@ namespace Monster_Trading_Cards_Game.Repositories
                 }
             }
         }
+
 
         public void ClearDeckInDatabase(string username)
         {

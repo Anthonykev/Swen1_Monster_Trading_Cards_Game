@@ -11,6 +11,7 @@ using Monster_Trading_Cards_Game.Interfaces;
 using Monster_Trading_Cards_Game.Network;
 using Npgsql;
 using Monster_Trading_Cards_Game.Repositories;
+using Monster_Trading_Cards_Game.Database;
 
 namespace Monster_Trading_Cards_Game.Models
 {
@@ -84,6 +85,14 @@ namespace Monster_Trading_Cards_Game.Models
                 throw new Exception("No packages available.");
             }
 
+            // Sicherstellen, dass das Paket genau 5 Karten enthält
+            if (package.Value.CardIds.Count != 5)
+            {
+                throw new Exception("Package does not contain exactly 5 cards.");
+            }
+
+            Console.WriteLine($"Adding package with {package.Value.CardIds.Count} cards to user {username}");
+
             foreach (var cardId in package.Value.CardIds)
             {
                 var card = cardRepository.GetCardById(cardId);
@@ -91,6 +100,7 @@ namespace Monster_Trading_Cards_Game.Models
                 {
                     Stack.Add(card);
                     userStackRepository.AddCardToUserStack(Id, cardId);
+                    Console.WriteLine($"Added card {cardId} to user {username}'s stack");
                 }
             }
 
@@ -101,9 +111,11 @@ namespace Monster_Trading_Cards_Game.Models
                 packageRepository.CreateRandomPackages(5);
             }
 
+            // Speichere nur die Benutzeränderungen
             new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").SaveToDatabase(this);
             Console.WriteLine("Package added successfully.");
         }
+
 
 
         public void ChooseDeck(string username, string token)

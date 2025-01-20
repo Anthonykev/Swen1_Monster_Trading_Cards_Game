@@ -49,6 +49,7 @@ namespace Monster_Trading_Cards_Game.Database
             Id SERIAL PRIMARY KEY,
             UserId INT NOT NULL REFERENCES Users(Id),
             CardId INT NOT NULL REFERENCES Cards(Id)
+            -- Keine UNIQUE oder PRIMARY KEY Einschränkungen auf UserId und CardId
         );
 
         CREATE TABLE IF NOT EXISTS UserDecks (
@@ -111,7 +112,5 @@ namespace Monster_Trading_Cards_Game.Database
                 return false;
             }
         }
-
-
     }
 }

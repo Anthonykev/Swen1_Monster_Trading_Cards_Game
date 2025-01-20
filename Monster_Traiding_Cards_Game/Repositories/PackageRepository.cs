@@ -45,6 +45,7 @@ namespace Monster_Trading_Cards_Game.Repositories
 
 
 
+
         public bool ArePackagesAvailable()
         {
             try
@@ -115,6 +116,8 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
             return null;
         }
+
+
 
 
         public void DeletePackage(int packageId)
