@@ -41,13 +41,17 @@ namespace Monster_Traiding_Cards.Repositories
                         return false; // Benutzer ist bereits in der Lobby
                     }
 
+                    // Überprüfen, ob der Benutzer ein Deck ausgewählt hat
+                    if (user.Deck == null || user.Deck.Count == 0)
+                    {
+                        Console.WriteLine($"User {username} has not selected a deck.");
+                        return false; // Benutzer hat kein Deck ausgewählt
+                    }
+
                     // Benutzer zur Lobby hinzufügen
                     var insertCommand = new NpgsqlCommand("INSERT INTO Lobby (UserId) VALUES (@UserId)", connection);
                     insertCommand.Parameters.AddWithValue("UserId", user.Id);
                     insertCommand.ExecuteNonQuery();
-
-                    // Deck auswählen
-                    user.ChooseDeck(username, token);
 
                     // Überprüfen, ob zwei Benutzer in der Lobby sind
                     var lobbyCountCommand = new NpgsqlCommand("SELECT COUNT(*) FROM Lobby", connection);
@@ -68,6 +72,8 @@ namespace Monster_Traiding_Cards.Repositories
                 return false;
             }
         }
+
+
 
         private void StartBattle(NpgsqlConnection connection)
         {

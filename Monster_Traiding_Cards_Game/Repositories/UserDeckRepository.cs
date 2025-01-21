@@ -19,10 +19,13 @@ namespace Monster_Trading_Cards_Game.Repositories
                 using (var connection = new NpgsqlConnection(_connectionString))
                 {
                     connection.Open();
+                    Console.WriteLine($"Connected to database. Adding card {cardId} to deck for user {userId}");
                     var command = new NpgsqlCommand("INSERT INTO UserDecks (UserId, CardId) VALUES (@userId, @cardId) ON CONFLICT (UserId, CardId) DO NOTHING", connection);
                     command.Parameters.AddWithValue("@userId", userId);
                     command.Parameters.AddWithValue("@cardId", cardId);
-                    return command.ExecuteNonQuery() > 0;
+                    var result = command.ExecuteNonQuery() > 0;
+                    Console.WriteLine($"AddCardToUserDeck: UserId={userId}, CardId={cardId}, Result={result}");
+                    return result;
                 }
             }
             catch (Exception ex)
@@ -32,6 +35,10 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
         }
 
+
+
+
+
         public bool ClearUserDeck(int userId)
         {
             try
@@ -39,9 +46,20 @@ namespace Monster_Trading_Cards_Game.Repositories
                 using (var connection = new NpgsqlConnection(_connectionString))
                 {
                     connection.Open();
+                    Console.WriteLine($"Connected to database. Clearing deck for user {userId}");
                     var command = new NpgsqlCommand("DELETE FROM UserDecks WHERE UserId = @userId", connection);
                     command.Parameters.AddWithValue("@userId", userId);
-                    return command.ExecuteNonQuery() > 0;
+                    var result = command.ExecuteNonQuery();
+                    if (result > 0)
+                    {
+                        Console.WriteLine($"ClearUserDeck: UserId={userId}, Result=True");
+                        return true;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"ClearUserDeck: UserId={userId}, Deck is already clear");
+                        return true; // Return true even if the deck was already clear
+                    }
                 }
             }
             catch (Exception ex)
@@ -50,6 +68,10 @@ namespace Monster_Trading_Cards_Game.Repositories
                 return false;
             }
         }
+
+
+
+
+
     }
 }
-

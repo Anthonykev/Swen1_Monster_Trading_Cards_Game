@@ -117,7 +117,6 @@ namespace Monster_Trading_Cards_Game.Models
         }
 
 
-
         public void ChooseDeck(string username, string token)
         {
             if (!IsAuthenticated(username, token))
@@ -125,19 +124,54 @@ namespace Monster_Trading_Cards_Game.Models
                 throw new AuthenticationException("User is not authenticated.");
             }
 
-            new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").ClearDeckInDatabase(UserName);
+            var userDeckRepository = new UserDeckRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+            var userStackRepository = new UserStackRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+            var cardRepository = new CardRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
 
+            // Clear existing deck in the database
+            Console.WriteLine($"Clearing existing deck for user {Id}");
+            userDeckRepository.ClearUserDeck(Id);
+
+            // Get the user's cards from the UserStacks table
+            var userCardIds = userStackRepository.GetUserStack(Id);
+            Stack = userCardIds.Select(cardId => cardRepository.GetCardById(cardId)).Where(card => card != null).ToList()!;
+
+            // Sort the stack
             var sortedStack = Stack
                 .OrderByDescending(card => card.Damage)
                 .ThenBy(card => card.CardElementType == ElementType.Water ? 1 :
                     card.CardElementType == ElementType.Fire ? 2 : 3)
-                .ThenByDescending(card => card.GetType().Name)
+                .ThenBy(card => card.GetType().Name)
                 .ToList();
 
+            // Select the top 4 cards for the deck
             Deck = sortedStack.Take(4).ToList();
+
+            // Ausgabe der Karten im Deck
+            Console.WriteLine("Deck contains the following cards:");
+            foreach (var card in Deck)
+            {
+                Console.WriteLine($"Card ID: {card.Id}, Name: {card.Name}, Damage: {card.Damage}, Element: {card.CardElementType}");
+            }
+
+            // Add new deck to the database
+            foreach (var card in Deck)
+            {
+                Console.WriteLine($"Adding card {card.Id} to deck for user {Id}");
+                userDeckRepository.AddCardToUserDeck(Id, card.Id);
+            }
 
             new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").SaveToDatabase(this);
         }
+
+
+
+
+
+
+
+
+
 
         public void ReturnDeckToStack(string username, string token)
         {

@@ -322,8 +322,53 @@ namespace Monster_Trading_Cards_Game.Network
                 }
                 return true;
             }
+            else if ((e.Path.TrimEnd('/', ' ', '\t') == "/choose-deck") && (e.Method == "POST"))
+            {
+                try
+                {
+                    JsonNode? json = JsonNode.Parse(e.Payload);
+                    string? token = json?["token"]?.ToString();
+                    string? username = json?["username"]?.ToString();
 
+                    if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(username))
+                    {
+                        e.Reply(HttpStatusCode.BAD_REQUEST, new JsonObject
+                        {
+                            ["success"] = false,
+                            ["message"] = "Missing token or username."
+                        }.ToJsonString());
+                        return true;
+                    }
 
+                    User? user = User.GetByUsernameAndToken(username, token);
+                    if (user == null)
+                    {
+                        e.Reply(HttpStatusCode.UNAUTHORIZED, new JsonObject
+                        {
+                            ["success"] = false,
+                            ["message"] = "Invalid username or token."
+                        }.ToJsonString());
+                        return true;
+                    }
+
+                    user.ChooseDeck(username, token);
+
+                    e.Reply(HttpStatusCode.OK, new JsonObject
+                    {
+                        ["success"] = true,
+                        ["message"] = "Deck selected successfully."
+                    }.ToJsonString());
+                }
+                catch (Exception ex)
+                {
+                    e.Reply(HttpStatusCode.INTERNAL_SERVER_ERROR, new JsonObject()
+                    {
+                        ["success"] = false,
+                        ["message"] = $"An unexpected error occurred: {ex.Message}"
+                    }.ToJsonString());
+                }
+                return true;
+            }
 
             return false;
         }

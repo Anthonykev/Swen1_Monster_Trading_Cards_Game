@@ -16,6 +16,12 @@ curl -X POST http://127.0.0.1:12000/login -H "Content-Type: application/json" -d
 curl -X POST http://127.0.0.1:12000/buy-package -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-1\", \"username\":\"admin\"}"
 curl -X POST http://127.0.0.1:12000/buy-package -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-2\", \"username\":\"admin2\"}"
 
+
+# Deck für Admins auswählen
+curl -X POST http://127.0.0.1:12000/choose-deck -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-1\", \"username\":\"admin\"}"
+curl -X POST http://127.0.0.1:12000/choose-deck -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-2\", \"username\":\"admin2\"}"
+
+
 # Battle-Anfrage senden (zwei admins)
 curl -X POST http://127.0.0.1:12000/battle-request -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-1\", \"username\":\"admin\"}"
 curl -X POST http://127.0.0.1:12000/battle-request -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-2\", \"username\":\"admin2\"}"
