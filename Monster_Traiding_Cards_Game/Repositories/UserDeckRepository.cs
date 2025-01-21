@@ -20,7 +20,8 @@ namespace Monster_Trading_Cards_Game.Repositories
                 {
                     connection.Open();
                     Console.WriteLine($"Connected to database. Adding card {cardId} to deck for user {userId}");
-                    var command = new NpgsqlCommand("INSERT INTO UserDecks (UserId, CardId) VALUES (@userId, @cardId) ON CONFLICT (UserId, CardId) DO NOTHING", connection);
+                    var command = new NpgsqlCommand("INSERT INTO UserDecks (UserId, CardId) VALUES (@userId, @cardId)", connection);
+
                     command.Parameters.AddWithValue("@userId", userId);
                     command.Parameters.AddWithValue("@cardId", cardId);
                     var result = command.ExecuteNonQuery() > 0;
