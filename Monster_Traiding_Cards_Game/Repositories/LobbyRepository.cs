@@ -38,14 +38,34 @@ namespace Monster_Traiding_Cards.Repositories
 
                     if (count > 0)
                     {
+                        Console.WriteLine($"User {username} is already in the lobby.\n");
                         return false; // Benutzer ist bereits in der Lobby
                     }
 
-                    // Überprüfen, ob der Benutzer ein Deck ausgewählt hat
-                    if (user.Deck == null || user.Deck.Count == 0)
+                    // Deck des Benutzers aus der Datenbank abrufen
+                    var deckCommand = new NpgsqlCommand("SELECT CardId FROM UserDecks WHERE UserId = @UserId", connection);
+                    deckCommand.Parameters.AddWithValue("UserId", user.Id);
+                    var deck = new List<int>();
+                    using (var reader = deckCommand.ExecuteReader())
                     {
-                        Console.WriteLine($"User {username} has not selected a deck.");
-                        return false; // Benutzer hat kein Deck ausgewählt
+                        while (reader.Read())
+                        {
+                            deck.Add(reader.GetInt32(0));
+                        }
+                    }
+
+                    // Überprüfen, ob das Deck genau 4 Karten enthält
+                    if (deck.Count != 4)
+                    {
+                        if (deck.Count > 4)
+                        {
+                            Console.WriteLine($"User {username} has too many cards in the deck.");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"User {username} has too few cards in the deck.");
+                        }
+                        return false; // Benutzer hat nicht genau 4 Karten im Deck
                     }
 
                     // Benutzer zur Lobby hinzufügen
@@ -72,6 +92,7 @@ namespace Monster_Traiding_Cards.Repositories
                 return false;
             }
         }
+
 
 
 
