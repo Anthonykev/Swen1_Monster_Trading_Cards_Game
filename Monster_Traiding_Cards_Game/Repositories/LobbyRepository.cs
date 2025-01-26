@@ -16,6 +16,11 @@ namespace Monster_Traiding_Cards.Repositories
             _battleRepository = new BattleRepository(connectionString);
         }
 
+        public string GetConnectionString()
+        {
+            return _connectionString;
+        }
+
         public bool AddUserToLobby(string username, string token)
         {
             try
@@ -137,6 +142,7 @@ namespace Monster_Traiding_Cards.Repositories
                 Console.WriteLine($"Error starting battle: {ex.Message}");
             }
         }
+
         public void ClearLobby()
         {
             try
@@ -154,8 +160,5 @@ namespace Monster_Traiding_Cards.Repositories
                 Console.WriteLine($"Error clearing the lobby: {ex.Message}");
             }
         }
-
-
-
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Monster_Trading_Cards_Game.Repositories;
+using Monster_Traiding_Cards.Repositories;
 using Npgsql;
 
 namespace Monster_Trading_Cards_Game.Models
@@ -45,6 +46,9 @@ namespace Monster_Trading_Cards_Game.Models
             {
                 throw new InvalidOperationException($"{Player2.UserName} has no cards in their deck.");
             }
+
+            // Remove players from the lobby
+            RemovePlayersFromLobby();
 
             Console.WriteLine($"Battle started between {Player1.UserName} and {Player2.UserName}!");
 
@@ -125,6 +129,34 @@ namespace Monster_Trading_Cards_Game.Models
             Player2.Save(Player2.SessionToken);
         }
 
+        /// <summary>Removes the players from the lobby.</summary>
+        private void RemovePlayersFromLobby()
+        {
+            var lobbyRepository = new LobbyRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+
+            using (var connection = new NpgsqlConnection(lobbyRepository.GetConnectionString()))
+            {
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        var deleteCommand = new NpgsqlCommand("DELETE FROM Lobby WHERE UserId = @User1Id OR UserId = @User2Id", connection, transaction);
+                        deleteCommand.Parameters.AddWithValue("User1Id", Player1.Id);
+                        deleteCommand.Parameters.AddWithValue("User2Id", Player2.Id);
+                        deleteCommand.ExecuteNonQuery();
+
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error removing players from lobby: {ex.Message}");
+                        transaction.Rollback();
+                    }
+                }
+            }
+        }
+
         /// <summary>Returns the cards to the original owners after the battle.</summary>
         private void ReturnCardsToOriginalOwners()
         {
@@ -174,5 +206,3 @@ namespace Monster_Trading_Cards_Game.Models
         }
     }
 }
-
-
