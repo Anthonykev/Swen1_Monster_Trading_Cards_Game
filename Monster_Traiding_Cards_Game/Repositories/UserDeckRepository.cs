@@ -1,33 +1,31 @@
 using Monster_Trading_Cards_Game.Models;
 using Npgsql;
 using System;
+using System.Collections.Generic;
 
 namespace Monster_Trading_Cards_Game.Repositories
 {
     public class UserDeckRepository
     {
-        private readonly string _connectionString;
+        public string ConnectionString { get; }
 
         public UserDeckRepository(string connectionString)
         {
-            _connectionString = connectionString;
+            ConnectionString = connectionString;
         }
 
         public bool AddCardToUserDeck(int userId, int cardId)
         {
             try
             {
-                using (var connection = new NpgsqlConnection(_connectionString))
+                using (var connection = new NpgsqlConnection(ConnectionString))
                 {
                     connection.Open();
-                    Console.WriteLine($"Connected to database. Adding card {cardId} to deck for user {userId}");
                     var command = new NpgsqlCommand("INSERT INTO UserDecks (UserId, CardId) VALUES (@userId, @cardId)", connection);
 
                     command.Parameters.AddWithValue("@userId", userId);
                     command.Parameters.AddWithValue("@cardId", cardId);
-                    var result = command.ExecuteNonQuery() > 0;
-                    Console.WriteLine($"AddCardToUserDeck: UserId={userId}, CardId={cardId}, Result={result}");
-                    return result;
+                    return command.ExecuteNonQuery() > 0;
                 }
             }
             catch (Exception ex)
@@ -37,12 +35,66 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
         }
 
+
+
+        public bool AddCardToUserDeck(int userId, int cardId, NpgsqlConnection connection, NpgsqlTransaction transaction)
+        {
+            try
+            {
+                var command = new NpgsqlCommand("INSERT INTO UserDecks (UserId, CardId) VALUES (@userId, @cardId)", connection, transaction);
+                command.Parameters.AddWithValue("@userId", userId);
+                command.Parameters.AddWithValue("@cardId", cardId);
+                return command.ExecuteNonQuery() > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error adding card to user deck: {ex.Message}");
+                return false;
+            }
+        }
+
+        public bool RemoveCardFromUserDeck(int userId, int cardId)
+        {
+            try
+            {
+                using (var connection = new NpgsqlConnection(ConnectionString))
+                {
+                    connection.Open();
+                    var command = new NpgsqlCommand("DELETE FROM UserDecks WHERE UserId = @userId AND CardId = @cardId", connection);
+                    command.Parameters.AddWithValue("@userId", userId);
+                    command.Parameters.AddWithValue("@cardId", cardId);
+                    return command.ExecuteNonQuery() > 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error removing card from user deck: {ex.Message}");
+                return false;
+            }
+        }
+
+        public bool RemoveCardFromUserDeck(int userId, int cardId, NpgsqlConnection connection, NpgsqlTransaction transaction)
+        {
+            try
+            {
+                var command = new NpgsqlCommand("DELETE FROM UserDecks WHERE UserId = @userId AND CardId = @cardId", connection, transaction);
+                command.Parameters.AddWithValue("@userId", userId);
+                command.Parameters.AddWithValue("@cardId", cardId);
+                return command.ExecuteNonQuery() > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error removing card from user deck: {ex.Message}");
+                return false;
+            }
+        }
+
         public List<Card> GetUserDeck(int userId)
         {
             var deck = new List<Card>();
             try
             {
-                using (var connection = new NpgsqlConnection(_connectionString))
+                using (var connection = new NpgsqlConnection(ConnectionString))
                 {
                     connection.Open();
                     var command = new NpgsqlCommand("SELECT CardId FROM UserDecks WHERE UserId = @userId", connection);
@@ -52,7 +104,7 @@ namespace Monster_Trading_Cards_Game.Repositories
                         while (reader.Read())
                         {
                             var cardId = reader.GetInt32(0);
-                            var cardRepository = new CardRepository(_connectionString);
+                            var cardRepository = new CardRepository(ConnectionString);
                             var card = cardRepository.GetCardById(cardId);
                             if (card != null)
                             {
@@ -69,14 +121,11 @@ namespace Monster_Trading_Cards_Game.Repositories
             return deck;
         }
 
-
-
-
         public bool ClearUserDeck(int userId)
         {
             try
             {
-                using (var connection = new NpgsqlConnection(_connectionString))
+                using (var connection = new NpgsqlConnection(ConnectionString))
                 {
                     connection.Open();
                     Console.WriteLine($"Connected to database. Clearing deck for user {userId}");
@@ -102,12 +151,11 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
         }
 
-
         public void ClearAllUserDecks()
         {
             try
             {
-                using (var connection = new NpgsqlConnection(_connectionString))
+                using (var connection = new NpgsqlConnection(ConnectionString))
                 {
                     connection.Open();
                     var clearDecksCommand = new NpgsqlCommand("DELETE FROM UserDecks", connection);
@@ -120,10 +168,7 @@ namespace Monster_Trading_Cards_Game.Repositories
                 Console.WriteLine($"Fehler beim Leeren der Benutzerdecks: {ex.Message}");
             }
         }
-
-
-
-
-
     }
 }
+
+

@@ -67,8 +67,8 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
         }
 
-  
-       
+
+
         public Card? GetCardById(int cardId)
         {
             using (var connection = new NpgsqlConnection(_connectionString))
@@ -85,6 +85,8 @@ namespace Monster_Trading_Cards_Game.Repositories
                         int damage = reader.GetInt32(2);
                         ElementType elementType = Enum.Parse<ElementType>(reader.GetString(3));
                         string type = reader.GetString(4);
+
+                        Console.WriteLine($"Loaded card: ID={id}, Name={name}, Damage={damage}, ElementType={elementType}, Type={type}");
 
                         if (type == "Monster-Card")
                         {
@@ -103,6 +105,8 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
             return null;
         }
+
+
     }
 
 }

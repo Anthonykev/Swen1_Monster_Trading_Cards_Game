@@ -57,14 +57,7 @@ namespace Monster_Traiding_Cards.Repositories
                     // Überprüfen, ob das Deck genau 4 Karten enthält
                     if (deck.Count != 4)
                     {
-                        if (deck.Count > 4)
-                        {
-                            Console.WriteLine($"User {username} has too many cards in the deck.");
-                        }
-                        else
-                        {
-                            Console.WriteLine($"User {username} has too few cards in the deck.");
-                        }
+                        Console.WriteLine($"User {username} has an invalid number of cards in the deck.");
                         return false; // Benutzer hat nicht genau 4 Karten im Deck
                     }
 
@@ -92,9 +85,6 @@ namespace Monster_Traiding_Cards.Repositories
                 return false;
             }
         }
-
-
-
 
         private void StartBattle(NpgsqlConnection connection)
         {

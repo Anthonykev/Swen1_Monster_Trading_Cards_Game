@@ -117,52 +117,45 @@ namespace Monster_Trading_Cards_Game.Models
         }
 
 
-        public void ChooseDeck(string username, string token)
+        public void ChooseDeck(string username, string token, List<int> cardIds)
         {
             if (!IsAuthenticated(username, token))
             {
                 throw new AuthenticationException("User is not authenticated.");
             }
 
-            var userDeckRepository = new UserDeckRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+            if (cardIds.Count != 4)
+            {
+                throw new ArgumentException("You must select exactly 4 cards for the deck.");
+            }
+
             var userStackRepository = new UserStackRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+            var userDeckRepository = new UserDeckRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
             var cardRepository = new CardRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
 
-            // Clear existing deck in the database
-            Console.WriteLine($"Clearing existing deck for user {Id}");
+            // Alle Karten-IDs des Benutzers abrufen
+            var userCardIds = userStackRepository.GetUserStack(Id);
+
+            // Prüfen, ob die ausgewählten Karten zur Sammlung des Benutzers gehören
+            if (!cardIds.All(cardId => userCardIds.Contains(cardId)))
+            {
+                throw new InvalidOperationException("One or more selected cards do not belong to the user.");
+            }
+
+            // Bestehendes Deck löschen
             userDeckRepository.ClearUserDeck(Id);
 
-            // Get the user's cards from the UserStacks table
-            var userCardIds = userStackRepository.GetUserStack(Id);
-            Stack = userCardIds.Select(cardId => cardRepository.GetCardById(cardId)).Where(card => card != null).ToList()!;
-
-            // Sort the stack
-            var sortedStack = Stack
-                .OrderByDescending(card => card.Damage)
-                .ThenBy(card => card.CardElementType == ElementType.Water ? 1 :
-                    card.CardElementType == ElementType.Fire ? 2 : 3)
-                .ThenBy(card => card.GetType().Name)
-                .ToList();
-
-            // Select the top 4 cards for the deck
-            Deck = sortedStack.Take(4).ToList();
-
-            // Ausgabe der Karten im Deck
-            Console.WriteLine("Deck contains the following cards:");
-            foreach (var card in Deck)
+            // Neues Deck speichern
+            foreach (var cardId in cardIds)
             {
-                Console.WriteLine($"Card ID: {card.Id}, Name: {card.Name}, Damage: {card.Damage}, Element: {card.CardElementType}");
+                userDeckRepository.AddCardToUserDeck(Id, cardId);
             }
 
-            // Add new deck to the database
-            foreach (var card in Deck)
-            {
-                Console.WriteLine($"Adding card {card.Id} to deck for user {Id}");
-                userDeckRepository.AddCardToUserDeck(Id, card.Id);
-            }
-
-            new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").SaveToDatabase(this);
+            // Karteninformationen für das neue Deck laden
+            Deck = cardIds.Select(cardId => cardRepository.GetCardById(cardId)).Where(card => card != null).ToList();
         }
+
+
 
 
 

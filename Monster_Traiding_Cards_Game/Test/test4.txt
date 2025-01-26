@@ -40,3 +40,15 @@ curl -X POST http://127.0.0.1:12000/login -H "Content-Type: application/json" -d
 # Benutzer ausloggen
 curl -X POST http://127.0.0.1:12000/sessions/logout -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-1\"}"
 curl -X POST http://127.0.0.1:12000/sessions/logout -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-2\"}"
+
+
+
+
+
+----------------------------------------------------------------------
+
+#get all users cards 
+curl -X POST http://127.0.0.1:12000/get-user-cards -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-2\", \"username\":\"admin2\"}"
+
+# Deck für Admins auswählen
+curl -X POST http://127.0.0.1:12000/choose-deck -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-2\", \"username\":\"admin2\", \"cardIds\":[1,2,3,4]}"

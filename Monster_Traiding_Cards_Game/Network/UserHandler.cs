@@ -322,7 +322,7 @@ namespace Monster_Trading_Cards_Game.Network
                 }
                 return true;
             }
-            else if ((e.Path.TrimEnd('/', ' ', '\t') == "/choose-deck") && (e.Method == "POST"))
+            else if ((e.Path.TrimEnd('/', ' ', '\t') == "/get-user-cards") && (e.Method == "POST"))
             {
                 try
                 {
@@ -335,7 +335,7 @@ namespace Monster_Trading_Cards_Game.Network
                         e.Reply(HttpStatusCode.BAD_REQUEST, new JsonObject
                         {
                             ["success"] = false,
-                            ["message"] = "Missing token or username."
+                            ["message"] = "Missing username or token."
                         }.ToJsonString());
                         return true;
                     }
@@ -351,17 +351,38 @@ namespace Monster_Trading_Cards_Game.Network
                         return true;
                     }
 
-                    user.ChooseDeck(username, token);
+                    var userStackRepository = new UserStackRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+                    var cardRepository = new CardRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+
+                    // Alle Karten-IDs des Benutzers holen
+                    var userCardIds = userStackRepository.GetUserStack(user.Id);
+
+                    // Details der Karten aus der Cards-Tabelle holen
+                    var userCards = new List<object>();
+                    foreach (var cardId in userCardIds)
+                    {
+                        var card = cardRepository.GetCardById(cardId);
+                        if (card != null)
+                        {
+                            userCards.Add(new
+                            {
+                                CardId = card.Id,
+                                Name = card.Name,
+                                Damage = card.Damage,
+                                ElementType = card.CardElementType.ToString()
+                            });
+                        }
+                    }
 
                     e.Reply(HttpStatusCode.OK, new JsonObject
                     {
                         ["success"] = true,
-                        ["message"] = "Deck selected successfully."
+                        ["cards"] = JsonSerializer.Serialize(userCards)
                     }.ToJsonString());
                 }
                 catch (Exception ex)
                 {
-                    e.Reply(HttpStatusCode.INTERNAL_SERVER_ERROR, new JsonObject()
+                    e.Reply(HttpStatusCode.INTERNAL_SERVER_ERROR, new JsonObject
                     {
                         ["success"] = false,
                         ["message"] = $"An unexpected error occurred: {ex.Message}"
@@ -369,6 +390,59 @@ namespace Monster_Trading_Cards_Game.Network
                 }
                 return true;
             }
+
+            else if ((e.Path.TrimEnd('/', ' ', '\t') == "/choose-deck") && (e.Method == "POST"))
+            {
+                try
+                {
+                    JsonNode? json = JsonNode.Parse(e.Payload);
+                    string? token = json?["token"]?.ToString();
+                    string? username = json?["username"]?.ToString();
+                    JsonArray? cardIdsArray = json?["cardIds"]?.AsArray();
+
+                    if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(username) || cardIdsArray == null || cardIdsArray.Count != 4)
+                    {
+                        e.Reply(HttpStatusCode.BAD_REQUEST, new JsonObject
+                        {
+                            ["success"] = false,
+                            ["message"] = "Invalid request. Provide username, token, and exactly 4 card IDs."
+                        }.ToJsonString());
+                        return true;
+                    }
+
+                    List<int> cardIds = cardIdsArray.Select(c => c.GetValue<int>()).ToList();
+
+                    User? user = User.GetByUsernameAndToken(username, token);
+                    if (user == null)
+                    {
+                        e.Reply(HttpStatusCode.UNAUTHORIZED, new JsonObject
+                        {
+                            ["success"] = false,
+                            ["message"] = "Invalid username or token."
+                        }.ToJsonString());
+                        return true;
+                    }
+
+                    user.ChooseDeck(username, token, cardIds);
+
+                    e.Reply(HttpStatusCode.OK, new JsonObject
+                    {
+                        ["success"] = true,
+                        ["message"] = "Deck updated successfully."
+                    }.ToJsonString());
+                }
+                catch (Exception ex)
+                {
+                    e.Reply(HttpStatusCode.INTERNAL_SERVER_ERROR, new JsonObject
+                    {
+                        ["success"] = false,
+                        ["message"] = $"An unexpected error occurred: {ex.Message}"
+                    }.ToJsonString());
+                }
+                return true;
+            }
+
+
 
             return false;
         }

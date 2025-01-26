@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Monster_Trading_Cards_Game.Repositories;
+using Npgsql;
 
 namespace Monster_Trading_Cards_Game.Models
 {
@@ -13,6 +12,8 @@ namespace Monster_Trading_Cards_Game.Models
         public User Player2 { get; private set; }
         public User? Winner { get; private set; }
 
+        private readonly UserDeckRepository _userDeckRepository;
+
         /// <summary>Initializes a new instance of the <see cref="Round"/> class.</summary>
         /// <param name="player1">The first player.</param>
         /// <param name="player2">The second player.</param>
@@ -20,14 +21,15 @@ namespace Monster_Trading_Cards_Game.Models
         {
             Player1 = player1;
             Player2 = player2;
+            _userDeckRepository = new UserDeckRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
         }
 
         /// <summary>Plays the round and determines the winner.</summary>
-        public void Play()
+        public void Play(Random random)
         {
-            // Assuming both players play with their decks
-            var player1Card = Player1.Deck.First();
-            var player2Card = Player2.Deck.First();
+            // Select random cards from each player's deck
+            var player1Card = GetRandomCard(Player1.Deck, random);
+            var player2Card = GetRandomCard(Player2.Deck, random);
 
             double player1Damage = player1Card.CalculateDamage(player2Card);
             double player2Damage = player2Card.CalculateDamage(player1Card);
@@ -39,13 +41,13 @@ namespace Monster_Trading_Cards_Game.Models
             {
                 Winner = Player1;
                 Console.WriteLine($"Round winner: {Player1.UserName}");
-                TransferCard(Player2, Player1);
+                TransferCardDuringBattle(Player2, player2Card, Player1);
             }
             else if (player2Damage > player1Damage)
             {
                 Winner = Player2;
                 Console.WriteLine($"Round winner: {Player2.UserName}");
-                TransferCard(Player1, Player2);
+                TransferCardDuringBattle(Player1, player1Card, Player2);
             }
             else
             {
@@ -58,15 +60,40 @@ namespace Monster_Trading_Cards_Game.Models
             Player2.Deck.Remove(player2Card);
         }
 
-        /// <summary>Transfers a card from the loser to the winner.</summary>
-        private void TransferCard(User loser, User winner)
+        /// <summary>Transfers a card from the loser to the winner temporarily during the battle.</summary>
+        private void TransferCardDuringBattle(User loser, Card card, User winner)
         {
-            if (loser.Deck.Count > 0)
+            loser.Deck.Remove(card);
+            winner.Deck.Add(card);
+
+            // Update the database
+            using (var connection = new NpgsqlConnection(_userDeckRepository.ConnectionString))
             {
-                var card = loser.Deck.First();
-                loser.Deck.Remove(card);
-                winner.Deck.Add(card);
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        _userDeckRepository.RemoveCardFromUserDeck(loser.Id, card.Id, connection, transaction);
+                        _userDeckRepository.AddCardToUserDeck(winner.Id, card.Id, connection, transaction);
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error transferring card: {ex.Message}");
+                        transaction.Rollback();
+                    }
+                }
             }
+        }
+
+        /// <summary>Selects a random card from the deck.</summary>
+        private Card GetRandomCard(System.Collections.Generic.List<Card> deck, Random random)
+        {
+            int randomIndex = random.Next(deck.Count);
+            return deck[randomIndex];
         }
     }
 }
+
+
