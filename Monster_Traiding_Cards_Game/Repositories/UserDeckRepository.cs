@@ -1,3 +1,4 @@
+using Monster_Trading_Cards_Game.Models;
 using Npgsql;
 using System;
 
@@ -36,6 +37,37 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
         }
 
+        public List<Card> GetUserDeck(int userId)
+        {
+            var deck = new List<Card>();
+            try
+            {
+                using (var connection = new NpgsqlConnection(_connectionString))
+                {
+                    connection.Open();
+                    var command = new NpgsqlCommand("SELECT CardId FROM UserDecks WHERE UserId = @userId", connection);
+                    command.Parameters.AddWithValue("@userId", userId);
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var cardId = reader.GetInt32(0);
+                            var cardRepository = new CardRepository(_connectionString);
+                            var card = cardRepository.GetCardById(cardId);
+                            if (card != null)
+                            {
+                                deck.Add(card);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error getting user deck: {ex.Message}");
+            }
+            return deck;
+        }
 
 
 
@@ -67,6 +99,25 @@ namespace Monster_Trading_Cards_Game.Repositories
             {
                 Console.WriteLine($"Error clearing user deck: {ex.Message}");
                 return false;
+            }
+        }
+
+
+        public void ClearAllUserDecks()
+        {
+            try
+            {
+                using (var connection = new NpgsqlConnection(_connectionString))
+                {
+                    connection.Open();
+                    var clearDecksCommand = new NpgsqlCommand("DELETE FROM UserDecks", connection);
+                    clearDecksCommand.ExecuteNonQuery();
+                    Console.WriteLine("Alle Benutzerdecks wurden geleert.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Fehler beim Leeren der Benutzerdecks: {ex.Message}");
             }
         }
 

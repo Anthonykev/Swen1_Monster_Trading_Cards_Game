@@ -121,11 +121,21 @@ namespace Monster_Traiding_Cards.Repositories
 
                 if (player1 != null && player2 != null)
                 {
+                    // Decks der Benutzer abrufen
+                    var userDeckRepository = new UserDeckRepository(_connectionString);
+                    player1.Deck = userDeckRepository.GetUserDeck(user1Id);
+                    player2.Deck = userDeckRepository.GetUserDeck(user2Id);
+
+                    if (player1.Deck.Count == 0 || player2.Deck.Count == 0)
+                    {
+                        throw new Exception($"{(player1.Deck.Count == 0 ? player1.UserName : player2.UserName)} has no cards in their deck.");
+                    }
+
                     // Battle starten
                     var battle = new Battle(player1, player2);
                     battle.Start();
 
-                    // Benutzer aus der Lobby entfernen
+                    // Benutzer aus der Lobby entfernen, wenn der Battle erfolgreich gestartet wurde
                     var deleteCommand = new NpgsqlCommand("DELETE FROM Lobby WHERE UserId = @User1Id OR UserId = @User2Id", connection);
                     deleteCommand.Parameters.AddWithValue("User1Id", user1Id);
                     deleteCommand.Parameters.AddWithValue("User2Id", user2Id);
@@ -137,5 +147,25 @@ namespace Monster_Traiding_Cards.Repositories
                 Console.WriteLine($"Error starting battle: {ex.Message}");
             }
         }
+        public void ClearLobby()
+        {
+            try
+            {
+                using (var connection = new NpgsqlConnection(_connectionString))
+                {
+                    connection.Open();
+                    var clearLobbyCommand = new NpgsqlCommand("DELETE FROM Lobby", connection);
+                    clearLobbyCommand.ExecuteNonQuery();
+                    Console.WriteLine("Lobby cleared.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error clearing the lobby: {ex.Message}");
+            }
+        }
+
+
+
     }
 }

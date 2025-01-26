@@ -4,6 +4,7 @@ using Monster_Trading_Cards_Game.Network;
 using Monster_Trading_Cards_Game.Interfaces;
 using Monster_Trading_Cards_Game.Database;
 using Monster_Trading_Cards_Game.Repositories;
+using Monster_Traiding_Cards.Repositories;
 
 namespace Monster_Trading_Cards_Game
 {
@@ -47,14 +48,23 @@ namespace Monster_Trading_Cards_Game
         {
             try
             {
+                Console.WriteLine("OnProcessExit aufgerufen.");
                 SessionHandler.LogoutAllUsers();
                 Console.WriteLine("Alle Benutzer wurden abgemeldet.");
+
+                // Lobby und Benutzerdecks leeren
+                var lobbyRepository = new LobbyRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+                lobbyRepository.ClearLobby();
+
+                var userDeckRepository = new UserDeckRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+                userDeckRepository.ClearAllUserDecks();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Fehler beim Abmelden aller Benutzer: {ex.Message}");
             }
         }
+
 
     }
 }
