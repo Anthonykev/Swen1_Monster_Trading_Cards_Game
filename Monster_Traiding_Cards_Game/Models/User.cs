@@ -35,21 +35,14 @@ namespace Monster_Trading_Cards_Game.Models
         public int Losses { get; set; } = 0;
         public int TotalGames { get; set; } = 0;
 
-        public void Save(string token)
+        public void Save(string username, string token)
         {
-            (bool Success, User? User) auth = Token.Authenticate(token);
-            if (auth.Success)
-            {
-                if (auth.User!.UserName != UserName)
-                {
-                    throw new SecurityException("Trying to change other user's data.");
-                }
-                new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").SaveToDatabase(this);
-            }
-            else
+            if (!IsAuthenticated(username, token))
             {
                 throw new AuthenticationException("Not authenticated.");
             }
+
+            new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").SaveToDatabase(this);
         }
 
         public bool IsAuthenticated(string username, string token)
@@ -112,10 +105,9 @@ namespace Monster_Trading_Cards_Game.Models
             }
 
             // Speichere nur die Benutzeränderungen
-            new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").SaveToDatabase(this);
+            Save(username, token);
             Console.WriteLine("Package added successfully.");
         }
-
 
         public void ChooseDeck(string username, string token, List<int> cardIds)
         {
@@ -155,17 +147,6 @@ namespace Monster_Trading_Cards_Game.Models
             Deck = cardIds.Select(cardId => cardRepository.GetCardById(cardId)).Where(card => card != null).ToList();
         }
 
-
-
-
-
-
-
-
-
-
-
-
         public void ReturnDeckToStack(string username, string token)
         {
             if (!IsAuthenticated(username, token))
@@ -175,7 +156,7 @@ namespace Monster_Trading_Cards_Game.Models
 
             Stack.AddRange(Deck);
             Deck.Clear();
-            new UserRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards").SaveToDatabase(this);
+            Save(username, token);
         }
 
         public static (bool Success, string Token) Logon(string userName, string password)

@@ -125,8 +125,8 @@ namespace Monster_Trading_Cards_Game.Models
             ReturnCardsToOriginalOwners();
 
             // Save changes to database
-            Player1.Save(Player1.SessionToken);
-            Player2.Save(Player2.SessionToken);
+            Player1.Save(Player1.UserName, Player1.SessionToken);
+            Player2.Save(Player2.UserName, Player2.SessionToken);
         }
 
         /// <summary>Removes the players from the lobby.</summary>
