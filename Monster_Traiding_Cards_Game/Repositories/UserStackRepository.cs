@@ -5,7 +5,7 @@ using Monster_Trading_Cards_Game.Models;
 using Monster_Trading_Cards_Game.Database;
 
 
-namespace Monster_Trading_Cards_Game.Database
+namespace Monster_Trading_Cards_Game.Repositories
 {
     public class UserStackRepository
     {
