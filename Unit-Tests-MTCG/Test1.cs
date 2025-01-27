@@ -12,24 +12,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-/*
-namespace Unit_Tests_MTCG
-{
-    [TestClass]
-    public sealed class Test1
-    {
-        [TestMethod]
-        public void TestMethod1()
-        {
-        }
-    }
-}
-*/
+
 
 namespace Unit_Tests_MTCG
 {
     [TestClass]
-    public class Test1
+    public class TestsCards
     {
         [TestMethod]
         public void TestCalculateDamage()
