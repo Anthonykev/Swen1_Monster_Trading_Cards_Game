@@ -27,6 +27,35 @@ namespace Monster_Trading_Cards_Game.Models
         // Berechnung des Schadens basierend auf dem Gegner
         public double CalculateDamage(Card opponent)
         {
+            // Spezialregeln
+            if (Name == "Goblins" && opponent.Name == "Dragons")
+            {
+                Console.WriteLine("Special Rule: Goblins do not attack Dragons. No damage!!");
+                return 0; // Goblins greifen keine Drachen an
+            }
+            if (Name == "Orks" && opponent.Name == "Wizzard")
+            { 
+                Console.WriteLine("Special Rule: Orks deal no damage to Wizards. No damage dealt.");
+          
+                return 0; // Orks richten keinen Schaden an
+            }
+
+            if (Name == "Tsunami" && opponent.Name == "Knights")
+            {
+                Console.WriteLine("Special Rule: Knights instantly lose to WaterSpells. Immediate loss.");
+                return double.MaxValue; // Knights ertrinken sofort
+            }
+            if (Name.Contains("Spell") && opponent.Name == "Kraken")
+            {
+                Console.WriteLine("Special Rule: Kraken are immune to Spells. No damage dealt.");
+                return 0; // Kraken sind immun gegen Spells
+            }
+            if (Name == "Dragons" && opponent.Name == "FireElves")
+            {
+                Console.WriteLine("Special Rule: FireElves evade attacks from Dragons. No damage dealt.");
+                return 0; // FireElves weichen Drachenangriffen aus
+            }
+
             double effectiveness = 1.0;
 
             // Effektivitätsregel basierend auf den Typen
