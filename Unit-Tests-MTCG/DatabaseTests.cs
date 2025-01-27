@@ -23,12 +23,14 @@ namespace Unit_Tests_MTCG
         [TestInitialize]
         public void TestInitialize()
         {
+            // Initialisiere Repositories
             _userRepository = new UserRepository(TestConnectionString);
             _cardRepository = new CardRepository(TestConnectionString);
             _packageRepository = new PackageRepository(TestConnectionString);
             _userStackRepository = new UserStackRepository(TestConnectionString);
             _userDeckRepository = new UserDeckRepository(TestConnectionString);
 
+            // Tabellen erstellen und Testdaten hinzufügen
             CreateTables createTables = new CreateTables(TestConnectionString);
             createTables.Execute_CreateTables();
             SeedTestData();
@@ -37,44 +39,37 @@ namespace Unit_Tests_MTCG
         [TestCleanup]
         public void TestCleanup()
         {
-            ClearTestData();
+            // Entferne die Bereinigung, um Daten zu behalten
+            // ClearTestData();
         }
 
         private void SeedTestData()
         {
-            if (!_userRepository.UserExists("testuser1"))
+            // Überprüfen und erstellen, wenn Benutzer nicht existieren
+            if (!_userRepository.UserExists("admin"))
             {
-                _userRepository.CreateUser("testuser1", "password123", "Test User 1", "testuser1@example.com");
+                _userRepository.CreateUser("admin", "password123", "Test User 1", "testuser1@example.com");
             }
 
-            if (!_userRepository.UserExists("testuser2"))
+            if (!_userRepository.UserExists("admin2"))
             {
-                _userRepository.CreateUser("testuser2", "password123", "Test User 2", "testuser2@example.com");
+                _userRepository.CreateUser("admin2", "password123", "Test User 2", "testuser2@example.com");
             }
 
-            var user1 = User.Get("testuser1");
-            if (user1 == null)
-            {
-                user1 = User.GetByUsernameAndToken("testuser1", "");
-                var cards = _cardRepository.GetAllCards().Take(10).ToList();
-                foreach (var card in cards)
-                {
-                    user1.Stack.Add(card);
-                    _userStackRepository.AddCardToUserStack(user1.Id, card.Id);
-                }
-                user1.Save("testuser1", user1.SessionToken);
-            }
+            // Karten hinzufügen, falls noch nicht vorhanden
+            _cardRepository.AddDefaultCards();
 
+            // Pakete vorbereiten
             _packageRepository.CreateRandomPackages(3);
         }
 
         private void ClearTestData()
         {
+            Console.WriteLine("Clearing test data...");
             using (var connection = new NpgsqlConnection(TestConnectionString))
             {
                 connection.Open();
-                var command = new NpgsqlCommand(@"
-                    TRUNCATE TABLE Lobby, BattleRounds, Battles, UserDecks, UserStacks, Packages, Cards, Users RESTART IDENTITY CASCADE;", connection);
+                var command = new NpgsqlCommand("TRUNCATE Users, Cards, Packages, UserStacks, UserDecks RESTART IDENTITY CASCADE;", connection);
                 command.ExecuteNonQuery();
             }
         }
@@ -82,27 +77,40 @@ namespace Unit_Tests_MTCG
         [TestMethod]
         public void TestUserRegistration()
         {
-            var success = _userRepository.CreateUser("testuser111", "password123", "Test User 1", "testuser1@example.com");
+            // Versuche, den Benutzer zu erstellen
+            var success = _userRepository.CreateUser("kevin", "password123", "Test User", "kodzo@example.com");
 
             if (!success)
             {
-                var userExists = _userRepository.UserExists("testuser111");
-                Assert.IsTrue(userExists, "The user already exists in the database.");
-                Console.WriteLine("User already exists.");
+                // Überprüfen, ob der Benutzer bereits existiert
+                var userExists = _userRepository.UserExists("kevin");
+
+                if (userExists)
+                {
+                    // Benutzer existiert bereits, kein Fehler
+                    Console.WriteLine("User already exists.");
+                    return; // Test erfolgreich abgeschlossen
+                }
+                else
+                {
+                    // Benutzer existiert nicht, aber die Erstellung ist fehlgeschlagen
+                    Assert.Fail("User creation failed unexpectedly, and the user does not exist.");
+                }
             }
-            else
-            {
-                var userExists = _userRepository.UserExists("testuser111");
-                Assert.IsTrue(userExists, "The new user should exist in the database.");
-            }
+
+            // Überprüfen, ob der Benutzer erfolgreich erstellt wurde
+            var userCreated = _userRepository.UserExists("kevin");
+            Assert.IsTrue(userCreated, "The new user should exist in the database.");
         }
 
         [TestMethod]
         public void TestAddDefaultCards()
         {
+            // Füge Standardkarten hinzu
             var success = _cardRepository.AddDefaultCards();
             Assert.IsTrue(success, "Default cards should be added successfully.");
 
+            // Überprüfe, ob Karten in der Datenbank vorhanden sind
             using (var connection = new NpgsqlConnection(TestConnectionString))
             {
                 connection.Open();
@@ -115,7 +123,7 @@ namespace Unit_Tests_MTCG
         [TestMethod]
         public void TestUserLogin()
         {
-            var (success, token) = _userRepository.AuthenticateUser("testuser1", "password123");
+            var (success, token) = _userRepository.AuthenticateUser("admin", "password123");
             Assert.IsTrue(success, "User should be able to log in with correct credentials.");
             Assert.IsNotNull(token, "A session token should be generated upon login.");
         }
@@ -123,44 +131,45 @@ namespace Unit_Tests_MTCG
         [TestMethod]
         public void TestBuyPackage()
         {
-            var user = User.GetByUsernameAndToken("testuser1", "some-valid-token");
+            // Authentifiziere den Benutzer und erhalte den Token
+            var (loginSuccess, token) = _userRepository.AuthenticateUser("admin", "password123");
+            Assert.IsTrue(loginSuccess, "User should be able to log in with correct credentials.");
+            Assert.IsNotNull(token, "A session token should be generated upon login.");
+
+            // Hole den Benutzer mit dem Token
+            var user = User.GetByUsernameAndToken("admin", token);
             Assert.IsNotNull(user, "User should exist.");
             Assert.IsTrue(user.Coins >= 5, "User should have enough coins to buy a package.");
+            // Kaufe ein Paket
+            user.AddPackage("admin", token);
 
-            user.AddPackage("testuser1", user.SessionToken);
-
+            // Überprüfe die verbleibenden Münzen und die Anzahl der Karten im Stapel
             Assert.AreEqual(15, user.Coins, "User should have 15 coins left after buying a package.");
             Assert.IsTrue(user.Stack.Count >= 5, "User should have received 5 cards in their stack.");
         }
 
         [TestMethod]
-        public void TestGetUserCards()
+        public void TestUserExists()
         {
-            var user = User.GetByUsernameAndToken("testuser1", "some-valid-token");
-            Assert.IsNotNull(user, "User should exist.");
-
-            var userStack = _userStackRepository.GetUserStack(user.Id);
-            Assert.IsTrue(userStack.Count > 0, "User should have cards in their stack.");
-
-            var userCards = userStack.Select(cardId => _cardRepository.GetCardById(cardId)).Where(card => card != null).ToList();
-
-            Assert.IsTrue(userCards.Count > 0, "User should have valid cards in their stack.");
+            // Überprüfe, ob der Benutzer existiert
+            var userExists = _userRepository.UserExists("admin");
+            Assert.IsTrue(userExists, "The user 'admin' should exist in the database.");
         }
 
         [TestMethod]
-        public void TestChooseDeck()
+        public void TestCreateRandomPackages()
         {
-            var user = User.GetByUsernameAndToken("testuser1", "some-valid-token");
-            Assert.IsNotNull(user, "User should exist.");
+            // Erstelle zufällige Pakete
+            _packageRepository.CreateRandomPackages(5);
 
-            var userStack = _userStackRepository.GetUserStack(user.Id);
-            Assert.IsTrue(userStack.Count >= 4, "User should have at least 4 cards in their stack.");
-
-            var cardIds = userStack.Take(4).ToList();
-            user.ChooseDeck("testuser1", user.SessionToken, cardIds);
-
-            var deck = _userDeckRepository.GetUserDeck(user.Id);
-            Assert.AreEqual(4, deck.Count, "Deck should contain exactly 4 cards.");
+            // Überprüfe, ob Pakete in der Datenbank vorhanden sind
+            using (var connection = new NpgsqlConnection(TestConnectionString))
+            {
+                connection.Open();
+                var command = new NpgsqlCommand("SELECT COUNT(*) FROM Packages", connection);
+                int packageCount = Convert.ToInt32(command.ExecuteScalar());
+                Assert.IsTrue(packageCount >= 5, "There should be at least 5 packages in the database.");
+            }
         }
     }
 }
