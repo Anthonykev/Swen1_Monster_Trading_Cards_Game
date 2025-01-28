@@ -23,8 +23,8 @@ curl -X POST http://127.0.0.1:12000/get-user-cards -H "Content-Type: application
 
 
 # Deck für Admins auswählen
-curl -X POST http://127.0.0.1:12000/choose-deck -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-1\", \"username\":\"admin\", \"cardIds\":[11,17,15,14]}"
-curl -X POST http://127.0.0.1:12000/choose-deck -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-2\", \"username\":\"admin2\", \"cardIds\":[9,7,10,18]}"
+curl -X POST http://127.0.0.1:12000/choose-deck -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-1\", \"username\":\"admin\", \"cardIds\":[6,10,19,20]}"
+curl -X POST http://127.0.0.1:12000/choose-deck -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-2\", \"username\":\"admin2\", \"cardIds\":[12,13,15,8]}"
 
 
 

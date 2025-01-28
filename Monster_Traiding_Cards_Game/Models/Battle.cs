@@ -57,9 +57,11 @@ namespace Monster_Trading_Cards_Game.Models
 
             int roundCount = 0;
             int drawCount = 0;
+            const int maxRounds = 300; // Maximale Anzahl von Runden
+            const int maxConsecutiveDraws = 10; // Maximale Anzahl von aufeinanderfolgenden Unentschieden
             Random random = new Random();
 
-            while (Player1.Deck.Count > 0 && Player2.Deck.Count > 0 && roundCount < 100)
+            while (Player1.Deck.Count > 0 && Player2.Deck.Count > 0 && roundCount < maxRounds)
             {
                 Console.WriteLine($"\n--- Round {roundCount + 1} ---");
                 Round round = new Round(Player1, Player2, _configuration);
@@ -77,9 +79,9 @@ namespace Monster_Trading_Cards_Game.Models
 
                 roundCount++;
 
-                if (drawCount >= 20)
+                if (drawCount >= maxConsecutiveDraws)
                 {
-                    Console.WriteLine("The battle ended in a draw after 20 consecutive draws!");
+                    Console.WriteLine("The battle ended in a draw after 10 consecutive draws!");
                     Winner = null;
                     break;
                 }
@@ -132,6 +134,7 @@ namespace Monster_Trading_Cards_Game.Models
             Player1.Save(Player1.UserName, Player1.SessionToken);
             Player2.Save(Player2.UserName, Player2.SessionToken);
         }
+
 
 
         /// <summary>Removes the players from the lobby.</summary>

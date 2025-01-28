@@ -62,10 +62,6 @@ namespace Monster_Trading_Cards_Game.Models
                 Console.WriteLine("The round ended in a draw.");
             }
 
-            // Remove the played cards from the decks
-            Player1.Deck.Remove(player1Card);
-            Player2.Deck.Remove(player2Card);
-
             // Ausgabe der verbleibenden Karten
             Console.WriteLine($"{Player1.UserName} has {Player1.Deck.Count} cards left.");
             Console.WriteLine($"{Player2.UserName} has {Player2.Deck.Count} cards left.");
@@ -97,6 +93,9 @@ namespace Monster_Trading_Cards_Game.Models
                 }
             }
         }
+
+
+
 
         /// <summary>Selects a random card from the deck.</summary>
         private Card GetRandomCard(System.Collections.Generic.List<Card> deck, Random random)
