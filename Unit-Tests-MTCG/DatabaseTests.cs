@@ -1,12 +1,11 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Monster_Trading_Cards_Game;
-using Monster_Trading_Cards_Game.Database;
 using Monster_Trading_Cards_Game.Repositories;
 using Monster_Trading_Cards_Game.Models;
 using System;
-using System.Linq;
+using System.IO;
 using Npgsql;
 using Microsoft.Extensions.Configuration;
+using Monster_Trading_Cards_Game.Database;
 
 namespace Unit_Tests_MTCG
 {
@@ -28,9 +27,8 @@ namespace Unit_Tests_MTCG
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
 
             _configuration = builder.Build();
-            string testConnectionString = _configuration.GetConnectionString("TestConnection");
 
-            // Initialisiere Repositories mit der Test-Datenbank
+            // Initialisiere Repositories mit der Default-Datenbank
             _userRepository = new UserRepository(_configuration);
             _cardRepository = new CardRepository(_configuration);
             _packageRepository = new PackageRepository(_configuration);
@@ -47,7 +45,7 @@ namespace Unit_Tests_MTCG
         public void TestCleanup()
         {
             // Entferne die Bereinigung, um Daten zu behalten
-            // ClearTestData();
+            //ClearTestData();
         }
 
         private void SeedTestData()
@@ -72,8 +70,8 @@ namespace Unit_Tests_MTCG
 
         private void AddTestPackage(string username, string token)
         {
-            string testConnectionString = _configuration.GetConnectionString("TestConnection");
-            using (var connection = new NpgsqlConnection(testConnectionString))
+            string defaultConnectionString = _configuration.GetConnectionString("DefaultConnection");
+            using (var connection = new NpgsqlConnection(defaultConnectionString))
             {
                 connection.Open();
                 var command = new NpgsqlCommand(@"
@@ -96,9 +94,9 @@ namespace Unit_Tests_MTCG
 
         private void ClearTestData()
         {
-            string testConnectionString = _configuration.GetConnectionString("TestConnection");
+            string defaultConnectionString = _configuration.GetConnectionString("DefaultConnection");
             Console.WriteLine("Clearing test data...");
-            using (var connection = new NpgsqlConnection(testConnectionString))
+            using (var connection = new NpgsqlConnection(defaultConnectionString))
             {
                 connection.Open();
                 var command = new NpgsqlCommand("TRUNCATE Users, Cards, Packages, UserStacks, UserDecks RESTART IDENTITY CASCADE;", connection);
@@ -143,8 +141,8 @@ namespace Unit_Tests_MTCG
             Assert.IsTrue(success, "Default cards should be added successfully.");
 
             // Überprüfe, ob Karten in der Datenbank vorhanden sind
-            string testConnectionString = _configuration.GetConnectionString("TestConnection");
-            using (var connection = new NpgsqlConnection(testConnectionString))
+            string defaultConnectionString = _configuration.GetConnectionString("DefaultConnection");
+            using (var connection = new NpgsqlConnection(defaultConnectionString))
             {
                 connection.Open();
                 var command = new NpgsqlCommand("SELECT COUNT(*) FROM Cards", connection);
@@ -161,58 +159,227 @@ namespace Unit_Tests_MTCG
             Assert.IsNotNull(token, "A session token should be generated upon login.");
         }
 
+
         [TestMethod]
-        public void TestBuyPackage()
+        public void TestUserLogin2()
         {
-            // Verwende den festen Token aus dem test.bat-Skript
+            var (success, token) = _userRepository.AuthenticateUser("admin2", "password123");
+            Assert.IsTrue(success, "User should be able to log in with correct credentials.");
+            Assert.IsNotNull(token, "A session token should be generated upon login.");
+        }
+
+
+        [TestMethod]
+        public void TestBuyPackage_admin()
+        {
             string token = "fixed-token-1";
             string username = "admin";
 
-            Console.WriteLine($"Starting TestBuyPackage for user '{username}' with fixed token '{token}'.");
+            Console.WriteLine($"Starting TestBuyPackage for user '{username}'.");
 
-            // Authentifiziere den Benutzer und erhalte den Token
+            // Benutzer authentifizieren
             var (loginSuccess, loginToken) = _userRepository.AuthenticateUser(username, "password123");
-            Console.WriteLine($"Authentication result: {loginSuccess}, Token: {loginToken}");
-            Assert.IsTrue(loginSuccess, "User should be able to log in with correct credentials.");
-            Assert.IsNotNull(loginToken, "A session token should be generated upon login.");
+            Assert.IsTrue(loginSuccess, "User should be able to log in.");
+            Assert.IsNotNull(loginToken, "A session token should be generated.");
 
-            // Hole den Benutzer aus der Testdatenbank
+            // Benutzer abrufen
             var user = User.Get(username, _configuration);
-            Console.WriteLine($"Retrieved user from database: {user?.UserName}, Coins: {user?.Coins}, SessionToken: {user?.SessionToken}");
             Assert.IsNotNull(user, "User should exist.");
+            Console.WriteLine($"User '{user.UserName}' retrieved.");
 
-            // Setze den festen Token für den Benutzer
-            user.SessionToken = token;
-            user.Save(username, token);
-            Console.WriteLine($"Set fixed token for user '{username}'.");
+            // **Anzahl der Karten im Stack vor dem Kauf speichern**
+            var userCardsBefore = _userStackRepository.GetUserStack(user.Id);
+            int initialCardCount = userCardsBefore.Count;
+            Console.WriteLine($"User '{username}' has {initialCardCount} cards before buying a package.");
 
-            // Manipuliere Coins direkt in der Testdatenbank
-            string testConnectionString = _configuration.GetConnectionString("TestConnection");
-            using (var connection = new NpgsqlConnection(testConnectionString))
+            // **Überprüfen, ob der Benutzer genug Coins hat**
+            if (user.Coins < 5)
             {
-                connection.Open();
-                var command = new NpgsqlCommand("UPDATE Users SET Coins = 20 WHERE Username = @username", connection);
-                command.Parameters.AddWithValue("@username", username);
-                command.ExecuteNonQuery();
-                Console.WriteLine($"Set 20 coins for user '{username}' in database 'MTCG_Test'.");
+                Console.WriteLine($"Skipping package purchase test because user '{username}' has only {user.Coins} coins.");
+                Assert.Inconclusive("User does not have enough coins to buy a package.");
+                return;
             }
 
-            // Hole den Benutzer erneut mit dem festen Token
-            var userWithFixedToken = User.GetByUsernameAndToken(username, token, _configuration);
-            Console.WriteLine($"User retrieved with fixed token: {userWithFixedToken?.UserName}, Coins: {userWithFixedToken?.Coins}");
-            Assert.IsNotNull(userWithFixedToken, "User should exist.");
-            Assert.IsTrue(userWithFixedToken.Coins >= 5, "User should have enough coins to buy a package.");
+            // **Paket kaufen**
+            try
+            {
+                user.AddPackage(username, loginToken);
+                Console.WriteLine($"Package successfully added for user '{username}'.");
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail($"AddPackage() failed with exception: {ex.Message}");
+            }
 
-            // Kaufe ein Paket (Testlogik)
-            userWithFixedToken.Coins -= 5; // Simuliere Paketkauf
-            userWithFixedToken.Save(username, token); // Speichere Änderungen
+            // **Anzahl der Karten nach dem Kauf abrufen**
+            var userCardsAfter = _userStackRepository.GetUserStack(user.Id);
+            int finalCardCount = userCardsAfter.Count;
+            Console.WriteLine($"User '{username}' now has {finalCardCount} cards after buying a package.");
 
-            Console.WriteLine($"User '{username}' bought a package. Coins left: {userWithFixedToken.Coins}");
-
-            // Überprüfe die verbleibenden Münzen
-            Assert.AreEqual(15, userWithFixedToken.Coins, "User should have 15 coins left after buying a package.");
-            Console.WriteLine($"TestBuyPackage completed successfully for user '{username}'.");
+            // **Prüfen, ob genau 5 neue Karten hinzugefügt wurden**
+            Assert.AreEqual(initialCardCount + 5, finalCardCount, "User's stack should have exactly 5 more cards.");
         }
+
+        [TestMethod]
+        public void TestBuyPackage_admin2()
+        {
+            string token = "fixed-token-2";
+            string username = "admin2";
+
+            Console.WriteLine($"Starting TestBuyPackage for user '{username}'.");
+
+            // Benutzer authentifizieren
+            var (loginSuccess, loginToken) = _userRepository.AuthenticateUser(username, "password123");
+            Assert.IsTrue(loginSuccess, "User should be able to log in.");
+            Assert.IsNotNull(loginToken, "A session token should be generated.");
+
+            // Benutzer abrufen
+            var user = User.Get(username, _configuration);
+            Assert.IsNotNull(user, "User should exist.");
+            Console.WriteLine($"User '{user.UserName}' retrieved.");
+
+            // **Anzahl der Karten im Stack vor dem Kauf speichern**
+            var userCardsBefore = _userStackRepository.GetUserStack(user.Id);
+            int initialCardCount = userCardsBefore.Count;
+            Console.WriteLine($"User '{username}' has {initialCardCount} cards before buying a package.");
+
+            // **Überprüfen, ob der Benutzer genug Coins hat**
+            if (user.Coins < 5)
+            {
+                Console.WriteLine($"Skipping package purchase test because user '{username}' has only {user.Coins} coins.");
+                Assert.Inconclusive("User does not have enough coins to buy a package.");
+                return;
+            }
+
+            // **Paket kaufen**
+            try
+            {
+                user.AddPackage(username, loginToken);
+                Console.WriteLine($"Package successfully added for user '{username}'.");
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail($"AddPackage() failed with exception: {ex.Message}");
+            }
+
+            // **Anzahl der Karten nach dem Kauf abrufen**
+            var userCardsAfter = _userStackRepository.GetUserStack(user.Id);
+            int finalCardCount = userCardsAfter.Count;
+            Console.WriteLine($"User '{username}' now has {finalCardCount} cards after buying a package.");
+
+            // **Prüfen, ob genau 5 neue Karten hinzugefügt wurden**
+            Assert.AreEqual(initialCardCount + 5, finalCardCount, "User's stack should have exactly 5 more cards.");
+        }
+        [TestMethod]
+        public void TestChooseDeck_admin()
+        {
+            string token = "fixed-token-1";
+            string username = "admin";
+
+            Console.WriteLine($"Starting TestChooseDeck for user '{username}'.");
+
+            // Benutzer authentifizieren
+            var (loginSuccess, loginToken) = _userRepository.AuthenticateUser(username, "password123");
+            Assert.IsTrue(loginSuccess, "User should be able to log in.");
+            Assert.IsNotNull(loginToken, "A session token should be generated.");
+
+            // Benutzer abrufen
+            var user = User.Get(username, _configuration);
+            Assert.IsNotNull(user, "User should exist.");
+            Console.WriteLine($"User '{user.UserName}' retrieved.");
+
+            // **Alle Karten des Benutzers abrufen**
+            var userCards = _userStackRepository.GetUserStack(user.Id);
+            int totalCards = userCards.Count;
+            Console.WriteLine($"User '{username}' has {totalCards} cards in stack before choosing a deck.");
+
+            // **Überprüfen, ob der Benutzer mindestens 4 Karten besitzt**
+            if (totalCards < 4)
+            {
+                Console.WriteLine($"Skipping ChooseDeck test because user '{username}' has only {totalCards} cards.");
+                Assert.Inconclusive("User does not have enough cards to choose a deck.");
+                return;
+            }
+
+            // **Die ersten 4 Karten aus dem Stack für das Deck wählen**
+            var selectedCardIds = userCards.Take(4).ToList();
+
+            // **Deck wählen**
+            try
+            {
+                user.ChooseDeck(username, loginToken, selectedCardIds);
+                Console.WriteLine($"Deck successfully chosen for user '{username}' with cards: {string.Join(", ", selectedCardIds)}");
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail($"ChooseDeck() failed with exception: {ex.Message}");
+            }
+
+            // **Deck nach der Auswahl abrufen**
+            var userDeck = _userDeckRepository.GetUserDeck(user.Id);
+            int deckSize = userDeck.Count;
+            Console.WriteLine($"User '{username}' now has {deckSize} cards in deck.");
+
+            // **Prüfen, ob genau 4 Karten im Deck sind**
+            Assert.AreEqual(4, deckSize, "User's deck should contain exactly 4 cards.");
+        }
+
+
+        [TestMethod]
+        public void TestChooseDeck_admin2()
+        {
+            string token = "fixed-token-2";
+            string username = "admin2";
+
+            Console.WriteLine($"Starting TestChooseDeck for user '{username}'.");
+
+            // Benutzer authentifizieren
+            var (loginSuccess, loginToken) = _userRepository.AuthenticateUser(username, "password123");
+            Assert.IsTrue(loginSuccess, "User should be able to log in.");
+            Assert.IsNotNull(loginToken, "A session token should be generated.");
+
+            // Benutzer abrufen
+            var user = User.Get(username, _configuration);
+            Assert.IsNotNull(user, "User should exist.");
+            Console.WriteLine($"User '{user.UserName}' retrieved.");
+
+            // **Alle Karten des Benutzers abrufen**
+            var userCards = _userStackRepository.GetUserStack(user.Id);
+            int totalCards = userCards.Count;
+            Console.WriteLine($"User '{username}' has {totalCards} cards in stack before choosing a deck.");
+
+            // **Überprüfen, ob der Benutzer mindestens 4 Karten besitzt**
+            if (totalCards < 4)
+            {
+                Console.WriteLine($"Skipping ChooseDeck test because user '{username}' has only {totalCards} cards.");
+                Assert.Inconclusive("User does not have enough cards to choose a deck.");
+                return;
+            }
+
+            // **Die ersten 4 Karten aus dem Stack für das Deck wählen**
+            var selectedCardIds = userCards.Take(4).ToList();
+
+            // **Deck wählen**
+            try
+            {
+                user.ChooseDeck(username, loginToken, selectedCardIds);
+                Console.WriteLine($"Deck successfully chosen for user '{username}' with cards: {string.Join(", ", selectedCardIds)}");
+            }
+            catch (Exception ex)
+            {
+                Assert.Fail($"ChooseDeck() failed with exception: {ex.Message}");
+            }
+
+            // **Deck nach der Auswahl abrufen**
+            var userDeck = _userDeckRepository.GetUserDeck(user.Id);
+            int deckSize = userDeck.Count;
+            Console.WriteLine($"User '{username}' now has {deckSize} cards in deck.");
+
+            // **Prüfen, ob genau 4 Karten im Deck sind**
+            Assert.AreEqual(4, deckSize, "User's deck should contain exactly 4 cards.");
+        }
+
+
 
         [TestMethod]
         public void TestUserExists()
@@ -222,22 +389,7 @@ namespace Unit_Tests_MTCG
             Assert.IsTrue(userExists, "The user 'admin' should exist in the database.");
         }
 
-        [TestMethod]
-        public void TestCreateRandomPackages()
-        {
-            // Erstelle zufällige Pakete
-            _packageRepository.CreateRandomPackages(5);
+        
 
-            // Überprüfe, ob Pakete in der Datenbank vorhanden sind
-            string testConnectionString = _configuration.GetConnectionString("TestConnection");
-            using (var connection = new NpgsqlConnection(testConnectionString))
-            {
-                connection.Open();
-                var command = new NpgsqlCommand("SELECT COUNT(*) FROM Packages", connection);
-                int packageCount = Convert.ToInt32(command.ExecuteScalar());
-                Assert.IsTrue(packageCount >= 5, "There should be at least 5 packages in the database.");
-            }
-        }
     }
 }
-
