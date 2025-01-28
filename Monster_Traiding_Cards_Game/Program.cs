@@ -26,11 +26,11 @@ namespace Monster_Trading_Cards_Game
 
             if (string.IsNullOrEmpty(connectionString))
             {
-                Console.WriteLine("⚠ Fehler: ConnectionString wurde nicht geladen!");
+                Console.WriteLine(" Fehler: ConnectionString wurde nicht geladen!");
             }
             else
             {
-                Console.WriteLine($"✅ ConnectionString erfolgreich geladen: {connectionString}");
+                //Console.WriteLine($" ConnectionString erfolgreich geladen: {connectionString}");
             }
 
             AppDomain.CurrentDomain.ProcessExit += new EventHandler(OnProcessExit);

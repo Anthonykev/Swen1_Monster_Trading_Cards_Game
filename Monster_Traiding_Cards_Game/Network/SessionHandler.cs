@@ -21,11 +21,11 @@ namespace Monster_Trading_Cards_Game.Network
 
             if (string.IsNullOrEmpty(_connectionString))
             {
-                Console.WriteLine("⚠ Fehler: SessionHandler hat keinen ConnectionString erhalten!");
+                Console.WriteLine("Fehler: SessionHandler hat keinen ConnectionString erhalten!");
             }
             else
             {
-                Console.WriteLine($"✅ SessionHandler ConnectionString: {_connectionString}");
+                //Console.WriteLine($"SessionHandler ConnectionString: {_connectionString}");
             }
         }
 
