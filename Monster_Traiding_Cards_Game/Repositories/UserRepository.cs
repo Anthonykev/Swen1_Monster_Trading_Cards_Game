@@ -1,8 +1,9 @@
-using Npgsql;
+﻿using Npgsql;
 using System;
 using System.Text;
 using System.Security.Cryptography;
 using Monster_Trading_Cards_Game.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace Monster_Trading_Cards_Game.Repositories
 {
@@ -10,9 +11,11 @@ namespace Monster_Trading_Cards_Game.Repositories
     {
         private readonly string _connectionString;
 
-        public UserRepository(string connectionString)
+        public string ConnectionString => _connectionString;
+
+        public UserRepository(IConfiguration configuration)
         {
-            _connectionString = connectionString;
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
         public bool CreateUser(string username, string password, string fullName, string email)
@@ -87,7 +90,7 @@ namespace Monster_Trading_Cards_Game.Repositories
                                 var userId = reader.GetInt32(0);
                                 if (username == "admin" || username == "admin2")
                                 {
-                                    // Fester Token f�r Admin-Benutzer
+                                    // Fester Token für Admin-Benutzer
                                     sessionToken = username == "admin" ? "fixed-token-1" : "fixed-token-2";
                                     UpdateUserToken(userId, sessionToken);
                                     return (true, sessionToken);
@@ -195,7 +198,6 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
         }
 
-
         public void ClearDeckInDatabase(string username)
         {
             using (var connection = new NpgsqlConnection(_connectionString))
@@ -263,4 +265,3 @@ namespace Monster_Trading_Cards_Game.Repositories
         }
     }
 }
-

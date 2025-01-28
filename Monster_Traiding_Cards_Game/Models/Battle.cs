@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Monster_Trading_Cards_Game.Repositories;
-using Monster_Traiding_Cards.Repositories;
 using Npgsql;
+using Microsoft.Extensions.Configuration;
 
 namespace Monster_Trading_Cards_Game.Models
 {
@@ -16,12 +16,14 @@ namespace Monster_Trading_Cards_Game.Models
 
         private List<Round> Rounds { get; set; }
         private Dictionary<int, List<Card>> OriginalDecks { get; set; }
+        private readonly IConfiguration _configuration;
 
         /// <summary>Initializes a new instance of the <see cref="Battle"/> class.</summary>
         /// <param name="player1">The first player.</param>
         /// <param name="player2">The second player.</param>
+        /// <param name="configuration">The configuration instance.</param>
         /// <exception cref="ArgumentNullException">Thrown when any of the players is null.</exception>
-        public Battle(User player1, User player2)
+        public Battle(User player1, User player2, IConfiguration configuration)
         {
             Player1 = player1 ?? throw new ArgumentNullException(nameof(player1), "Player1 cannot be null");
             Player2 = player2 ?? throw new ArgumentNullException(nameof(player2), "Player2 cannot be null");
@@ -31,6 +33,7 @@ namespace Monster_Trading_Cards_Game.Models
                 { player1.Id, new List<Card>(player1.Deck) },
                 { player2.Id, new List<Card>(player2.Deck) }
             };
+            _configuration = configuration;
         }
 
         /// <summary>Starts the battle between the two players.</summary>
@@ -58,7 +61,7 @@ namespace Monster_Trading_Cards_Game.Models
 
             while (Player1.Deck.Count > 0 && Player2.Deck.Count > 0 && roundCount < 100)
             {
-                Round round = new Round(Player1, Player2);
+                Round round = new Round(Player1, Player2, _configuration);
                 round.Play(random);
                 Rounds.Add(round);
 
@@ -132,9 +135,9 @@ namespace Monster_Trading_Cards_Game.Models
         /// <summary>Removes the players from the lobby.</summary>
         private void RemovePlayersFromLobby()
         {
-            var lobbyRepository = new LobbyRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+            var lobbyRepository = new LobbyRepository(_configuration);
 
-            using (var connection = new NpgsqlConnection(lobbyRepository.GetConnectionString()))
+            using (var connection = new NpgsqlConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
                 connection.Open();
                 using (var transaction = connection.BeginTransaction())
@@ -160,7 +163,7 @@ namespace Monster_Trading_Cards_Game.Models
         /// <summary>Returns the cards to the original owners after the battle.</summary>
         private void ReturnCardsToOriginalOwners()
         {
-            var userDeckRepository = new UserDeckRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+            var userDeckRepository = new UserDeckRepository(_configuration);
 
             using (var connection = new NpgsqlConnection(userDeckRepository.ConnectionString))
             {
@@ -206,3 +209,5 @@ namespace Monster_Trading_Cards_Game.Models
         }
     }
 }
+
+

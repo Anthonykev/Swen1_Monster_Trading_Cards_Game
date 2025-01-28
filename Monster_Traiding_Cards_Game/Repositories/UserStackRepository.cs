@@ -1,9 +1,7 @@
 using Npgsql;
 using System;
 using System.Collections.Generic;
-using Monster_Trading_Cards_Game.Models;
-using Monster_Trading_Cards_Game.Database;
-
+using Microsoft.Extensions.Configuration;
 
 namespace Monster_Trading_Cards_Game.Repositories
 {
@@ -11,9 +9,9 @@ namespace Monster_Trading_Cards_Game.Repositories
     {
         private readonly string _connectionString;
 
-        public UserStackRepository(string connectionString)
+        public UserStackRepository(IConfiguration configuration)
         {
-            _connectionString = connectionString;
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
         public void AddCardToUserStack(int userId, int cardId)
@@ -27,7 +25,6 @@ namespace Monster_Trading_Cards_Game.Repositories
                     command.Parameters.AddWithValue("@userId", userId);
                     command.Parameters.AddWithValue("@cardId", cardId);
                     command.ExecuteNonQuery();
-                    //Console.WriteLine($"Added card {cardId} to user {userId}'s stack in the database");
                 }
             }
             catch (Exception ex)
@@ -36,37 +33,30 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
         }
 
-
         public List<int> GetUserStack(int userId)
         {
-            var stack = new List<int>();
-
+            var cardIds = new List<int>();
             try
             {
                 using (var connection = new NpgsqlConnection(_connectionString))
                 {
                     connection.Open();
-                    var command = new NpgsqlCommand(@"
-                        SELECT CardId FROM UserStacks WHERE UserId = @userId
-                    ", connection);
-                    command.Parameters.AddWithValue("userId", userId);
-
+                    var command = new NpgsqlCommand("SELECT CardId FROM UserStacks WHERE UserId = @userId", connection);
+                    command.Parameters.AddWithValue("@userId", userId);
                     using (var reader = command.ExecuteReader())
                     {
                         while (reader.Read())
                         {
-                            stack.Add(reader.GetInt32(0));
+                            cardIds.Add(reader.GetInt32(0));
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error retrieving user stack: {ex.Message}");
-                throw;
+                Console.WriteLine($"Error getting user stack: {ex.Message}");
             }
-
-            return stack;
+            return cardIds;
         }
     }
 }

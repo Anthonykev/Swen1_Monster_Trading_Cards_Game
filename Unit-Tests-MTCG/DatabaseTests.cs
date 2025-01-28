@@ -6,14 +6,14 @@ using Monster_Trading_Cards_Game.Models;
 using System;
 using System.Linq;
 using Npgsql;
+using Microsoft.Extensions.Configuration;
 
 namespace Unit_Tests_MTCG
 {
     [TestClass]
     public class DatabaseTests
     {
-        private const string TestConnectionString = "Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=MTCG_Test";
-
+        private IConfiguration _configuration;
         private UserRepository _userRepository;
         private CardRepository _cardRepository;
         private PackageRepository _packageRepository;
@@ -23,15 +23,22 @@ namespace Unit_Tests_MTCG
         [TestInitialize]
         public void TestInitialize()
         {
-            // Initialisiere Repositories
-            _userRepository = new UserRepository(TestConnectionString);
-            _cardRepository = new CardRepository(TestConnectionString);
-            _packageRepository = new PackageRepository(TestConnectionString);
-            _userStackRepository = new UserStackRepository(TestConnectionString);
-            _userDeckRepository = new UserDeckRepository(TestConnectionString);
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
+
+            _configuration = builder.Build();
+            string testConnectionString = _configuration.GetConnectionString("TestConnection");
+
+            // Initialisiere Repositories mit der Test-Datenbank
+            _userRepository = new UserRepository(_configuration);
+            _cardRepository = new CardRepository(_configuration);
+            _packageRepository = new PackageRepository(_configuration);
+            _userStackRepository = new UserStackRepository(_configuration);
+            _userDeckRepository = new UserDeckRepository(_configuration);
 
             // Tabellen erstellen und Testdaten hinzufügen
-            CreateTables createTables = new CreateTables(TestConnectionString);
+            CreateTables createTables = new CreateTables(_configuration);
             createTables.Execute_CreateTables();
             SeedTestData();
         }
@@ -62,16 +69,18 @@ namespace Unit_Tests_MTCG
             // Pakete vorbereiten
             _packageRepository.CreateRandomPackages(3);
         }
+
         private void AddTestPackage(string username, string token)
         {
-            using (var connection = new NpgsqlConnection(TestConnectionString))
+            string testConnectionString = _configuration.GetConnectionString("TestConnection");
+            using (var connection = new NpgsqlConnection(testConnectionString))
             {
                 connection.Open();
                 var command = new NpgsqlCommand(@"
-            UPDATE Users 
-            SET Coins = Coins - 5 
-            WHERE Username = @username AND SessionToken = @token AND Coins >= 5;
-        ", connection);
+                    UPDATE Users 
+                    SET Coins = Coins - 5 
+                    WHERE Username = @username AND SessionToken = @token AND Coins >= 5;
+                ", connection);
                 command.Parameters.AddWithValue("@username", username);
                 command.Parameters.AddWithValue("@token", token);
 
@@ -85,11 +94,11 @@ namespace Unit_Tests_MTCG
             }
         }
 
-
         private void ClearTestData()
         {
+            string testConnectionString = _configuration.GetConnectionString("TestConnection");
             Console.WriteLine("Clearing test data...");
-            using (var connection = new NpgsqlConnection(TestConnectionString))
+            using (var connection = new NpgsqlConnection(testConnectionString))
             {
                 connection.Open();
                 var command = new NpgsqlCommand("TRUNCATE Users, Cards, Packages, UserStacks, UserDecks RESTART IDENTITY CASCADE;", connection);
@@ -134,7 +143,8 @@ namespace Unit_Tests_MTCG
             Assert.IsTrue(success, "Default cards should be added successfully.");
 
             // Überprüfe, ob Karten in der Datenbank vorhanden sind
-            using (var connection = new NpgsqlConnection(TestConnectionString))
+            string testConnectionString = _configuration.GetConnectionString("TestConnection");
+            using (var connection = new NpgsqlConnection(testConnectionString))
             {
                 connection.Open();
                 var command = new NpgsqlCommand("SELECT COUNT(*) FROM Cards", connection);
@@ -167,7 +177,7 @@ namespace Unit_Tests_MTCG
             Assert.IsNotNull(loginToken, "A session token should be generated upon login.");
 
             // Hole den Benutzer aus der Testdatenbank
-            var user = User.Get(username);
+            var user = User.Get(username, _configuration);
             Console.WriteLine($"Retrieved user from database: {user?.UserName}, Coins: {user?.Coins}, SessionToken: {user?.SessionToken}");
             Assert.IsNotNull(user, "User should exist.");
 
@@ -177,7 +187,8 @@ namespace Unit_Tests_MTCG
             Console.WriteLine($"Set fixed token for user '{username}'.");
 
             // Manipuliere Coins direkt in der Testdatenbank
-            using (var connection = new NpgsqlConnection(TestConnectionString))
+            string testConnectionString = _configuration.GetConnectionString("TestConnection");
+            using (var connection = new NpgsqlConnection(testConnectionString))
             {
                 connection.Open();
                 var command = new NpgsqlCommand("UPDATE Users SET Coins = 20 WHERE Username = @username", connection);
@@ -187,7 +198,7 @@ namespace Unit_Tests_MTCG
             }
 
             // Hole den Benutzer erneut mit dem festen Token
-            var userWithFixedToken = User.GetByUsernameAndToken(username, token);
+            var userWithFixedToken = User.GetByUsernameAndToken(username, token, _configuration);
             Console.WriteLine($"User retrieved with fixed token: {userWithFixedToken?.UserName}, Coins: {userWithFixedToken?.Coins}");
             Assert.IsNotNull(userWithFixedToken, "User should exist.");
             Assert.IsTrue(userWithFixedToken.Coins >= 5, "User should have enough coins to buy a package.");
@@ -202,12 +213,6 @@ namespace Unit_Tests_MTCG
             Assert.AreEqual(15, userWithFixedToken.Coins, "User should have 15 coins left after buying a package.");
             Console.WriteLine($"TestBuyPackage completed successfully for user '{username}'.");
         }
-
-
-
-
-
-
 
         [TestMethod]
         public void TestUserExists()
@@ -224,7 +229,8 @@ namespace Unit_Tests_MTCG
             _packageRepository.CreateRandomPackages(5);
 
             // Überprüfe, ob Pakete in der Datenbank vorhanden sind
-            using (var connection = new NpgsqlConnection(TestConnectionString))
+            string testConnectionString = _configuration.GetConnectionString("TestConnection");
+            using (var connection = new NpgsqlConnection(testConnectionString))
             {
                 connection.Open();
                 var command = new NpgsqlCommand("SELECT COUNT(*) FROM Packages", connection);
@@ -234,3 +240,4 @@ namespace Unit_Tests_MTCG
         }
     }
 }
+

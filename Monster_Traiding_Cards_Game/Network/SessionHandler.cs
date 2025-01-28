@@ -4,16 +4,29 @@ using System;
 using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using Npgsql;
+using Microsoft.Extensions.Configuration;
 
 namespace Monster_Trading_Cards_Game.Network
 {
     public class SessionHandler : Handler, IHandler
     {
         private static Dictionary<string, string> ActiveSessions = new();
+        private readonly string _connectionString;
+        private readonly IConfiguration _configuration;
 
-        public SessionHandler()
+        public SessionHandler(IConfiguration configuration)
         {
-            // Entfernen Sie den Aufruf von LoadActiveSessionsFromDatabase aus dem Konstruktor
+            _configuration = configuration;
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
+
+            if (string.IsNullOrEmpty(_connectionString))
+            {
+                Console.WriteLine("⚠ Fehler: SessionHandler hat keinen ConnectionString erhalten!");
+            }
+            else
+            {
+                Console.WriteLine($"✅ SessionHandler ConnectionString: {_connectionString}");
+            }
         }
 
         public void Initialize()
@@ -35,7 +48,7 @@ namespace Monster_Trading_Cards_Game.Network
                     {
                         string username = (string)json["username"]!;
                         string password = (string)json["password"]!;
-                        (bool Success, string Token) result = User.Logon(username, password);
+                        (bool Success, string Token) result = User.Logon(username, password, _configuration);
 
                         if (result.Success)
                         {
@@ -92,7 +105,7 @@ namespace Monster_Trading_Cards_Game.Network
                         string token = (string)json["token"]!;
 
                         // Prüfen, ob der Token existiert
-                        using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
+                        using (var connection = new NpgsqlConnection(_connectionString))
                         {
                             connection.Open();
                             var command = new NpgsqlCommand("SELECT Username FROM Users WHERE SessionToken = @token", connection);
@@ -143,14 +156,14 @@ namespace Monster_Trading_Cards_Game.Network
             return false;
         }
 
-        public static void LogoutAllUsers()
+        public void LogoutAllUsers()
         {
             int retryCount = 3;
             while (retryCount > 0)
             {
                 try
                 {
-                    using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
+                    using (var connection = new NpgsqlConnection(_connectionString))
                     {
                         connection.Open();
                         using (var transaction = connection.BeginTransaction())
@@ -176,11 +189,11 @@ namespace Monster_Trading_Cards_Game.Network
             }
         }
 
-        private static void LoadActiveSessionsFromDatabase()
+        private void LoadActiveSessionsFromDatabase()
         {
             try
             {
-                using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
+                using (var connection = new NpgsqlConnection(_connectionString))
                 {
                     connection.Open();
                     var command = new NpgsqlCommand("SELECT Username, SessionToken FROM Users WHERE SessionToken IS NOT NULL", connection);
@@ -202,11 +215,11 @@ namespace Monster_Trading_Cards_Game.Network
             }
         }
 
-        private static void UpdateUserTokenInDatabase(string token, string? newToken)
+        private void UpdateUserTokenInDatabase(string token, string? newToken)
         {
             try
             {
-                using (var connection = new NpgsqlConnection("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards"))
+                using (var connection = new NpgsqlConnection(_connectionString))
                 {
                     connection.Open();
                     var command = new NpgsqlCommand("UPDATE Users SET SessionToken = @newToken WHERE SessionToken = @token", connection);
@@ -222,3 +235,5 @@ namespace Monster_Trading_Cards_Game.Network
         }
     }
 }
+
+

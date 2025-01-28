@@ -2,6 +2,7 @@ using Npgsql;
 using System;
 using System.Collections.Generic;
 using Monster_Trading_Cards_Game.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace Monster_Trading_Cards_Game.Repositories
 {
@@ -9,9 +10,9 @@ namespace Monster_Trading_Cards_Game.Repositories
     {
         private readonly string _connectionString;
 
-        public CardRepository(string connectionString)
+        public CardRepository(IConfiguration configuration)
         {
-            _connectionString = connectionString;
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
         public bool AddDefaultCards()
@@ -67,8 +68,6 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
         }
 
-
-
         public Card? GetCardById(int cardId)
         {
             using (var connection = new NpgsqlConnection(_connectionString))
@@ -105,8 +104,5 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
             return null;
         }
-
-
     }
-
 }

@@ -1,5 +1,6 @@
 using Npgsql;
 using System;
+using Microsoft.Extensions.Configuration;
 
 namespace Monster_Trading_Cards_Game.Database
 {
@@ -7,10 +8,11 @@ namespace Monster_Trading_Cards_Game.Database
     {
         private readonly string _connectionString;
 
-        public CreateTables(string connectionString)
+        public CreateTables(IConfiguration configuration)
         {
-            _connectionString = connectionString;
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
+
         public bool Execute_CreateTables()
         {
             try
@@ -115,3 +117,4 @@ namespace Monster_Trading_Cards_Game.Database
         }
     }
 }
+

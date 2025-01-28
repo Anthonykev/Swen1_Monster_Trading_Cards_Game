@@ -2,6 +2,7 @@
 using System.Linq;
 using Monster_Trading_Cards_Game.Repositories;
 using Npgsql;
+using Microsoft.Extensions.Configuration;
 
 namespace Monster_Trading_Cards_Game.Models
 {
@@ -13,15 +14,18 @@ namespace Monster_Trading_Cards_Game.Models
         public User? Winner { get; private set; }
 
         private readonly UserDeckRepository _userDeckRepository;
+        private readonly IConfiguration _configuration;
 
         /// <summary>Initializes a new instance of the <see cref="Round"/> class.</summary>
         /// <param name="player1">The first player.</param>
         /// <param name="player2">The second player.</param>
-        public Round(User player1, User player2)
+        /// <param name="configuration">The configuration instance.</param>
+        public Round(User player1, User player2, IConfiguration configuration)
         {
             Player1 = player1;
             Player2 = player2;
-            _userDeckRepository = new UserDeckRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+            _configuration = configuration;
+            _userDeckRepository = new UserDeckRepository(configuration);
         }
 
         /// <summary>Plays the round and determines the winner.</summary>
@@ -95,5 +99,3 @@ namespace Monster_Trading_Cards_Game.Models
         }
     }
 }
-
-

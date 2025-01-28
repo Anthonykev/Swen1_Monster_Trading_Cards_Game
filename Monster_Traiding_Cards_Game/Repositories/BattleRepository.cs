@@ -1,5 +1,6 @@
 using Npgsql;
 using System;
+using Microsoft.Extensions.Configuration;
 
 namespace Monster_Trading_Cards_Game.Repositories
 {
@@ -7,9 +8,9 @@ namespace Monster_Trading_Cards_Game.Repositories
     {
         private readonly string _connectionString;
 
-        public BattleRepository(string connectionString)
+        public BattleRepository(IConfiguration configuration)
         {
-            _connectionString = connectionString;
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
         public bool AddBattle(int user1Id, int user2Id, int winnerId, int loserId)
@@ -35,4 +36,3 @@ namespace Monster_Trading_Cards_Game.Repositories
         }
     }
 }
-

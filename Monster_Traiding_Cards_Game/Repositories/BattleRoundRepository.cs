@@ -1,5 +1,6 @@
 using Npgsql;
 using System;
+using Microsoft.Extensions.Configuration;
 
 namespace Monster_Trading_Cards_Game.Repositories
 {
@@ -7,9 +8,9 @@ namespace Monster_Trading_Cards_Game.Repositories
     {
         private readonly string _connectionString;
 
-        public BattleRoundRepository(string connectionString)
+        public BattleRoundRepository(IConfiguration configuration)
         {
-            _connectionString = connectionString;
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
         public bool AddBattleRound(int battleId, int roundNumber, int player1CardId, int player2CardId, int winnerId, int loserId, string log)
@@ -38,4 +39,3 @@ namespace Monster_Trading_Cards_Game.Repositories
         }
     }
 }
-

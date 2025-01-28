@@ -1,7 +1,8 @@
-using Monster_Trading_Cards_Game.Models;
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
+using Monster_Trading_Cards_Game.Models;
 
 namespace Monster_Trading_Cards_Game.Repositories
 {
@@ -9,9 +10,9 @@ namespace Monster_Trading_Cards_Game.Repositories
     {
         public string ConnectionString { get; }
 
-        public UserDeckRepository(string connectionString)
+        public UserDeckRepository(IConfiguration configuration)
         {
-            ConnectionString = connectionString;
+            ConnectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
         public bool AddCardToUserDeck(int userId, int cardId)
@@ -22,7 +23,6 @@ namespace Monster_Trading_Cards_Game.Repositories
                 {
                     connection.Open();
                     var command = new NpgsqlCommand("INSERT INTO UserDecks (UserId, CardId) VALUES (@userId, @cardId)", connection);
-
                     command.Parameters.AddWithValue("@userId", userId);
                     command.Parameters.AddWithValue("@cardId", cardId);
                     return command.ExecuteNonQuery() > 0;
@@ -34,8 +34,6 @@ namespace Monster_Trading_Cards_Game.Repositories
                 return false;
             }
         }
-
-
 
         public bool AddCardToUserDeck(int userId, int cardId, NpgsqlConnection connection, NpgsqlTransaction transaction)
         {
@@ -91,7 +89,7 @@ namespace Monster_Trading_Cards_Game.Repositories
 
         public List<Card> GetUserDeck(int userId)
         {
-            var deck = new List<Card>();
+            var cards = new List<Card>();
             try
             {
                 using (var connection = new NpgsqlConnection(ConnectionString))
@@ -104,11 +102,11 @@ namespace Monster_Trading_Cards_Game.Repositories
                         while (reader.Read())
                         {
                             var cardId = reader.GetInt32(0);
-                            var cardRepository = new CardRepository(ConnectionString);
+                            var cardRepository = new CardRepository(new ConfigurationBuilder().AddJsonFile("appsettings.json").Build());
                             var card = cardRepository.GetCardById(cardId);
                             if (card != null)
                             {
-                                deck.Add(card);
+                                cards.Add(card);
                             }
                         }
                     }
@@ -118,7 +116,7 @@ namespace Monster_Trading_Cards_Game.Repositories
             {
                 Console.WriteLine($"Error getting user deck: {ex.Message}");
             }
-            return deck;
+            return cards;
         }
 
         public bool ClearUserDeck(int userId)
@@ -128,20 +126,9 @@ namespace Monster_Trading_Cards_Game.Repositories
                 using (var connection = new NpgsqlConnection(ConnectionString))
                 {
                     connection.Open();
-                    Console.WriteLine($"Connected to database. Clearing deck for user {userId}");
                     var command = new NpgsqlCommand("DELETE FROM UserDecks WHERE UserId = @userId", connection);
                     command.Parameters.AddWithValue("@userId", userId);
-                    var result = command.ExecuteNonQuery();
-                    if (result > 0)
-                    {
-                        Console.WriteLine($"ClearUserDeck: UserId={userId}, Result=True");
-                        return true;
-                    }
-                    else
-                    {
-                        Console.WriteLine($"ClearUserDeck: UserId={userId}, Deck is already clear");
-                        return true; // Return true even if the deck was already clear
-                    }
+                    return command.ExecuteNonQuery() > 0;
                 }
             }
             catch (Exception ex)
@@ -158,17 +145,15 @@ namespace Monster_Trading_Cards_Game.Repositories
                 using (var connection = new NpgsqlConnection(ConnectionString))
                 {
                     connection.Open();
-                    var clearDecksCommand = new NpgsqlCommand("DELETE FROM UserDecks", connection);
-                    clearDecksCommand.ExecuteNonQuery();
-                    Console.WriteLine("Alle Benutzerdecks wurden geleert.");
+                    var command = new NpgsqlCommand("DELETE FROM UserDecks", connection);
+                    command.ExecuteNonQuery();
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Fehler beim Leeren der Benutzerdecks: {ex.Message}");
+                Console.WriteLine($"Error clearing all user decks: {ex.Message}");
             }
         }
     }
 }
-
 

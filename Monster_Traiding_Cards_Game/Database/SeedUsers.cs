@@ -33,4 +33,3 @@ namespace Monster_Trading_Cards_Game.Database
         }
     }
 }
-

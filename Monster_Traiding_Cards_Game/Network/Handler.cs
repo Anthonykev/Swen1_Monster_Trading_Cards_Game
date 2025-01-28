@@ -1,4 +1,5 @@
-﻿using Monster_Trading_Cards_Game.Interfaces;
+﻿using Microsoft.Extensions.Configuration;
+using Monster_Trading_Cards_Game.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,32 +23,41 @@ namespace Monster_Trading_Cards_Game.Network
         /// <summary>List of available handlers.</summary>
         private static List<IHandler>? _Handlers = null;
 
-
-
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // private static methods                                                                                           //
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         /// <summary>Discovers and returns all available handler implementations.</summary>
         /// <returns>Returns a list of available handlers.</returns>
-        private static List<IHandler> _GetHandlers()
+        private static List<IHandler> _GetHandlers(IConfiguration configuration)
         {
             List<IHandler> rval = new();
 
             foreach (Type i in Assembly.GetExecutingAssembly().GetTypes()
-                              .Where(m => m.IsAssignableTo(typeof(IHandler)) && (!m.IsAbstract)))
+                                      .Where(m => m.IsAssignableTo(typeof(IHandler)) && !m.IsAbstract))
             {
-                IHandler? h = (IHandler?)Activator.CreateInstance(i);
-                if (h != null)
+                if (i == typeof(SessionHandler) || i == typeof(UserHandler))
                 {
-                    rval.Add(h);
+                    // Explizite Instanziierung von SessionHandler und UserHandler mit der Konfiguration
+                    IHandler? h = (IHandler?)Activator.CreateInstance(i, configuration);
+                    if (h != null)
+                    {
+                        rval.Add(h);
+                    }
+                }
+                else
+                {
+                    // Andere Handler ohne Konfiguration
+                    IHandler? h = (IHandler?)Activator.CreateInstance(i);
+                    if (h != null)
+                    {
+                        rval.Add(h);
+                    }
                 }
             }
 
             return rval;
         }
-
-
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // public static methods                                                                                            //
@@ -55,9 +65,10 @@ namespace Monster_Trading_Cards_Game.Network
 
         /// <summary>Handles an incoming HTTP request.</summary>
         /// <param name="e">Event arguments.</param>
-        public static void HandleEvent(HttpSvrEventArgs e)
+        /// <param name="configuration">Configuration instance.</param>
+        public static void HandleEvent(HttpSvrEventArgs e, IConfiguration configuration)
         {
-            _Handlers ??= _GetHandlers();
+            _Handlers ??= _GetHandlers(configuration);
 
             foreach (IHandler i in _Handlers)
             {
@@ -65,8 +76,6 @@ namespace Monster_Trading_Cards_Game.Network
             }
             e.Reply(HttpStatusCode.BAD_REQUEST);
         }
-
-
 
         //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
         // [interface] IHandler                                                                                             //
@@ -79,4 +88,3 @@ namespace Monster_Trading_Cards_Game.Network
         public abstract bool Handle(HttpSvrEventArgs e);
     }
 }
-

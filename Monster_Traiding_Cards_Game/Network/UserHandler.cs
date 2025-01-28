@@ -7,7 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Monster_Trading_Cards_Game.Repositories;
 using Monster_Trading_Cards_Game.Database;
-using Monster_Traiding_Cards.Repositories;
+using Microsoft.Extensions.Configuration;
 
 namespace Monster_Trading_Cards_Game.Network
 {
@@ -22,19 +22,20 @@ namespace Monster_Trading_Cards_Game.Network
         private readonly TradeRepository _tradeRepository;
         private readonly BattleRepository _battleRepository;
         private readonly BattleRoundRepository _battleRoundRepository;
+        private readonly IConfiguration _configuration;
 
-        public UserHandler()
+        public UserHandler(IConfiguration configuration)
         {
-            string connectionString = "Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards";
-            _createTables = new CreateTables(connectionString);
-            _cardRepository = new CardRepository(connectionString);
-            _userRepository = new UserRepository(connectionString);
-            _userStackRepository = new UserStackRepository(connectionString);
-            _userDeckRepository = new UserDeckRepository(connectionString);
-            _packageRepository = new PackageRepository(connectionString);
-            _tradeRepository = new TradeRepository(connectionString);
-            _battleRepository = new BattleRepository(connectionString);
-            _battleRoundRepository = new BattleRoundRepository(connectionString);
+            _configuration = configuration;
+            _createTables = new CreateTables(configuration);
+            _cardRepository = new CardRepository(configuration);
+            _userRepository = new UserRepository(configuration);
+            _userStackRepository = new UserStackRepository(configuration);
+            _userDeckRepository = new UserDeckRepository(configuration);
+            _packageRepository = new PackageRepository(configuration);
+            //_tradeRepository = new TradeRepository(configuration);
+            _battleRepository = new BattleRepository(configuration);
+            _battleRoundRepository = new BattleRoundRepository(configuration);
         }
 
         public override bool Handle(HttpSvrEventArgs e)
@@ -207,7 +208,7 @@ namespace Monster_Trading_Cards_Game.Network
 
                     Console.WriteLine($"Received request to buy package for user: {username} with token: {token}");
 
-                    User? user = User.GetByUsernameAndToken(username, token);
+                    User? user = User.GetByUsernameAndToken(username, token, _configuration);
                     if (user == null)
                     {
                         Console.WriteLine($"User not found or invalid token: {username}");
@@ -238,8 +239,6 @@ namespace Monster_Trading_Cards_Game.Network
                 }
                 return true;
             }
-
-
             else if ((e.Path.TrimEnd('/', ' ', '\t') == "/seed-users") && (e.Method == "POST"))
             {
                 try
@@ -283,7 +282,7 @@ namespace Monster_Trading_Cards_Game.Network
                         return true;
                     }
 
-                    User? user = User.GetByUsernameAndToken(username, token);
+                    User? user = User.GetByUsernameAndToken(username, token, _configuration);
                     if (user == null)
                     {
                         e.Reply(HttpStatusCode.UNAUTHORIZED, new JsonObject
@@ -294,7 +293,7 @@ namespace Monster_Trading_Cards_Game.Network
                         return true;
                     }
 
-                    var lobbyRepository = new LobbyRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+                    var lobbyRepository = new LobbyRepository(_configuration);
                     if (lobbyRepository.AddUserToLobby(username, token))
                     {
                         e.Reply(HttpStatusCode.OK, new JsonObject
@@ -340,7 +339,7 @@ namespace Monster_Trading_Cards_Game.Network
                         return true;
                     }
 
-                    User? user = User.GetByUsernameAndToken(username, token);
+                    User? user = User.GetByUsernameAndToken(username, token, _configuration);
                     if (user == null)
                     {
                         e.Reply(HttpStatusCode.UNAUTHORIZED, new JsonObject
@@ -351,8 +350,8 @@ namespace Monster_Trading_Cards_Game.Network
                         return true;
                     }
 
-                    var userStackRepository = new UserStackRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
-                    var cardRepository = new CardRepository("Host=localhost;Port=5432;Username=kevin;Password=spiel12345;Database=monster_cards");
+                    var userStackRepository = new UserStackRepository(_configuration);
+                    var cardRepository = new CardRepository(_configuration);
 
                     // Alle Karten-IDs des Benutzers holen
                     var userCardIds = userStackRepository.GetUserStack(user.Id);
@@ -390,7 +389,6 @@ namespace Monster_Trading_Cards_Game.Network
                 }
                 return true;
             }
-
             else if ((e.Path.TrimEnd('/', ' ', '\t') == "/choose-deck") && (e.Method == "POST"))
             {
                 try
@@ -412,7 +410,7 @@ namespace Monster_Trading_Cards_Game.Network
 
                     List<int> cardIds = cardIdsArray.Select(c => c.GetValue<int>()).ToList();
 
-                    User? user = User.GetByUsernameAndToken(username, token);
+                    User? user = User.GetByUsernameAndToken(username, token, _configuration);
                     if (user == null)
                     {
                         e.Reply(HttpStatusCode.UNAUTHORIZED, new JsonObject
@@ -441,8 +439,6 @@ namespace Monster_Trading_Cards_Game.Network
                 }
                 return true;
             }
-
-
 
             return false;
         }

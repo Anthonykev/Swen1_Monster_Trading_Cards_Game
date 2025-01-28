@@ -1,6 +1,7 @@
 using Npgsql;
 using System;
 using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
 
 namespace Monster_Trading_Cards_Game.Repositories
 {
@@ -8,9 +9,9 @@ namespace Monster_Trading_Cards_Game.Repositories
     {
         private readonly string _connectionString;
 
-        public PackageRepository(string connectionString)
+        public PackageRepository(IConfiguration configuration)
         {
-            _connectionString = connectionString;
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
         public void CreateRandomPackages(int numberOfPackages)
@@ -42,9 +43,6 @@ namespace Monster_Trading_Cards_Game.Repositories
                 Console.WriteLine($"Error creating random packages: {ex.Message}");
             }
         }
-
-
-
 
         public bool ArePackagesAvailable()
         {
@@ -98,13 +96,13 @@ namespace Monster_Trading_Cards_Game.Repositories
                         {
                             int packageId = reader.GetInt32(0);
                             var cardIds = new List<int>
-                    {
-                        reader.GetInt32(1),
-                        reader.GetInt32(2),
-                        reader.GetInt32(3),
-                        reader.GetInt32(4),
-                        reader.GetInt32(5)
-                    };
+                            {
+                                reader.GetInt32(1),
+                                reader.GetInt32(2),
+                                reader.GetInt32(3),
+                                reader.GetInt32(4),
+                                reader.GetInt32(5)
+                            };
                             return (packageId, cardIds);
                         }
                     }
@@ -116,9 +114,6 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
             return null;
         }
-
-
-
 
         public void DeletePackage(int packageId)
         {
@@ -151,7 +146,5 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
             return cardIds;
         }
-
-
     }
 }
