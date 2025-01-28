@@ -23,8 +23,8 @@ curl -X POST http://127.0.0.1:12000/get-user-cards -H "Content-Type: application
 
 
 # Deck für Admins auswählen
-curl -X POST http://127.0.0.1:12000/choose-deck -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-1\", \"username\":\"admin\", \"cardIds\":[12,18,5,6]}"
-curl -X POST http://127.0.0.1:12000/choose-deck -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-2\", \"username\":\"admin2\", \"cardIds\":[10,14,3,4]}"
+curl -X POST http://127.0.0.1:12000/choose-deck -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-1\", \"username\":\"admin\", \"cardIds\":[11,17,15,14]}"
+curl -X POST http://127.0.0.1:12000/choose-deck -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-2\", \"username\":\"admin2\", \"cardIds\":[9,7,10,18]}"
 
 
 
@@ -43,6 +43,11 @@ curl -X POST http://127.0.0.1:12000/login -H "Content-Type: application/json" -d
 
 # ELO-Rangliste abrufen
 curl -X GET http://127.0.0.1:12000/get-elo-ranking
+
+# Unique Features
+curl -X POST http://127.0.0.1:12000/set-motto -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-1\", \"username\":\"admin\", \"motto\":\"Coding is my passion.\"}"
+curl -X POST http://127.0.0.1:12000/set-motto -H "Content-Type: application/json" -d "{\"token\":\"fixed-token-2\", \"username\":\"admin2\", \"motto\":\"Kevin is my motivation.\"}"
+
 
 
 # Benutzer ausloggen

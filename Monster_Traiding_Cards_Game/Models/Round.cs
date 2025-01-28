@@ -35,8 +35,9 @@ namespace Monster_Trading_Cards_Game.Models
             var player1Card = GetRandomCard(Player1.Deck, random);
             var player2Card = GetRandomCard(Player2.Deck, random);
 
-            double player1Damage = player1Card.CalculateDamage(player2Card);
-            double player2Damage = player2Card.CalculateDamage(player1Card);
+            string player1Reason, player2Reason;
+            double player1Damage = player1Card.CalculateDamage(player2Card, out player1Reason);
+            double player2Damage = player2Card.CalculateDamage(player1Card, out player2Reason);
 
             Console.WriteLine($"{Player1.UserName} plays {player1Card.Name} with damage {player1Damage}");
             Console.WriteLine($"{Player2.UserName} plays {player2Card.Name} with damage {player2Damage}");
@@ -45,12 +46,14 @@ namespace Monster_Trading_Cards_Game.Models
             {
                 Winner = Player1;
                 Console.WriteLine($"Round winner: {Player1.UserName}");
+                Console.WriteLine($"Reason: {player1Reason}");
                 TransferCardDuringBattle(Player2, player2Card, Player1);
             }
             else if (player2Damage > player1Damage)
             {
                 Winner = Player2;
                 Console.WriteLine($"Round winner: {Player2.UserName}");
+                Console.WriteLine($"Reason: {player2Reason}");
                 TransferCardDuringBattle(Player1, player1Card, Player2);
             }
             else
@@ -62,6 +65,10 @@ namespace Monster_Trading_Cards_Game.Models
             // Remove the played cards from the decks
             Player1.Deck.Remove(player1Card);
             Player2.Deck.Remove(player2Card);
+
+            // Ausgabe der verbleibenden Karten
+            Console.WriteLine($"{Player1.UserName} has {Player1.Deck.Count} cards left.");
+            Console.WriteLine($"{Player2.UserName} has {Player2.Deck.Count} cards left.");
         }
 
         /// <summary>Transfers a card from the loser to the winner temporarily during the battle.</summary>

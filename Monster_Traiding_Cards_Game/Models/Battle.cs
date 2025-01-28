@@ -61,6 +61,7 @@ namespace Monster_Trading_Cards_Game.Models
 
             while (Player1.Deck.Count > 0 && Player2.Deck.Count > 0 && roundCount < 100)
             {
+                Console.WriteLine($"\n--- Round {roundCount + 1} ---");
                 Round round = new Round(Player1, Player2, _configuration);
                 round.Play(random);
                 Rounds.Add(round);
@@ -131,6 +132,7 @@ namespace Monster_Trading_Cards_Game.Models
             Player1.Save(Player1.UserName, Player1.SessionToken);
             Player2.Save(Player2.UserName, Player2.SessionToken);
         }
+
 
         /// <summary>Removes the players from the lobby.</summary>
         private void RemovePlayersFromLobby()

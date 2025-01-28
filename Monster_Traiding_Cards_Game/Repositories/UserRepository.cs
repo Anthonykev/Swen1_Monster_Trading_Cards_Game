@@ -163,17 +163,18 @@ namespace Monster_Trading_Cards_Game.Repositories
                     {
                         // Update user information
                         var command = new NpgsqlCommand(@"
-                UPDATE Users SET
-                    FullName = @fullName,
-                    EMail = @eMail,
-                    Coins = @coins,
-                    Password = @password,
-                    SessionToken = @sessionToken,
-                    Elo = @elo,
-                    Wins = @wins,
-                    Losses = @losses,
-                    TotalGames = @totalGames
-                WHERE Username = @username", connection);
+                    UPDATE Users SET
+                        FullName = @fullName,
+                        EMail = @eMail,
+                        Coins = @coins,
+                        Password = @password,
+                        SessionToken = @sessionToken,
+                        Elo = @elo,
+                        Wins = @wins,
+                        Losses = @losses,
+                        TotalGames = @totalGames,
+                        Motto = @motto -- Motto speichern
+                    WHERE Username = @username", connection);
                         command.Parameters.AddWithValue("@fullName", user.FullName);
                         command.Parameters.AddWithValue("@eMail", user.EMail);
                         command.Parameters.AddWithValue("@coins", user.Coins);
@@ -183,6 +184,7 @@ namespace Monster_Trading_Cards_Game.Repositories
                         command.Parameters.AddWithValue("@wins", user.Wins);
                         command.Parameters.AddWithValue("@losses", user.Losses);
                         command.Parameters.AddWithValue("@totalGames", user.TotalGames);
+                        command.Parameters.AddWithValue("@motto", user.Motto); // Motto speichern
                         command.Parameters.AddWithValue("@username", user.UserName);
                         command.ExecuteNonQuery();
 
@@ -197,6 +199,7 @@ namespace Monster_Trading_Cards_Game.Repositories
                 }
             }
         }
+
 
         public void ClearDeckInDatabase(string username)
         {

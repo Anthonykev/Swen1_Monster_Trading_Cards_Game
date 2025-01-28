@@ -30,6 +30,7 @@ public sealed class User
     public int Wins { get; set; } = 0;
     public int Losses { get; set; } = 0;
     public int TotalGames { get; set; } = 0;
+    public string Motto { get; set; } = string.Empty; // Neue Eigenschaft für das Motto
 
     public void Save(string username, string token)
     {
@@ -178,7 +179,7 @@ public sealed class User
         using (var connection = new NpgsqlConnection(configuration.GetConnectionString("DefaultConnection")))
         {
             connection.Open();
-            var command = new NpgsqlCommand("SELECT Id, Username, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames FROM Users WHERE Username = @username", connection);
+            var command = new NpgsqlCommand("SELECT Id, Username, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames, Motto FROM Users WHERE Username = @username", connection);
             command.Parameters.AddWithValue("@username", userName);
             using (var reader = command.ExecuteReader())
             {
@@ -196,7 +197,8 @@ public sealed class User
                         Elo = reader.GetInt32(7),
                         Wins = reader.GetInt32(8),
                         Losses = reader.GetInt32(9),
-                        TotalGames = reader.GetInt32(10)
+                        TotalGames = reader.GetInt32(10),
+                        Motto = reader.IsDBNull(11) ? string.Empty : reader.GetString(11) // Motto abrufen
                     };
                 }
             }
