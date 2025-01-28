@@ -439,6 +439,40 @@ namespace Monster_Trading_Cards_Game.Network
                 }
                 return true;
             }
+            else if ((e.Path.TrimEnd('/', ' ', '\t') == "/get-elo-ranking") && (e.Method == "GET"))
+            {
+                try
+                {
+                    var users = User.GetUsersSortedByElo(_configuration);
+                    var userRankings = users.Select(user => new
+                    {
+                        user.UserName,
+                        user.Elo
+                    });
+
+                    // Ausgabe der ELO-Rangliste auf dem Server
+                    Console.WriteLine("ELO-Rangliste:");
+                    foreach (var user in userRankings)
+                    {
+                        Console.WriteLine($"Benutzername: {user.UserName}, ELO: {user.Elo}");
+                    }
+
+                    e.Reply(HttpStatusCode.OK, new JsonObject
+                    {
+                        ["success"] = true,
+                        ["rankings"] = JsonSerializer.Serialize(userRankings)
+                    }.ToJsonString());
+                }
+                catch (Exception ex)
+                {
+                    e.Reply(HttpStatusCode.INTERNAL_SERVER_ERROR, new JsonObject
+                    {
+                        ["success"] = false,
+                        ["message"] = $"An unexpected error occurred: {ex.Message}"
+                    }.ToJsonString());
+                }
+                return true;
+            }
 
             return false;
         }

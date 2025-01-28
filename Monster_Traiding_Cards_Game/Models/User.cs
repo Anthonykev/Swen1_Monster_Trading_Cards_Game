@@ -293,5 +293,39 @@ public sealed class User
         }
         return null;
     }
+    public static List<User> GetUsersSortedByElo(IConfiguration configuration)
+    {
+        List<User> users = new List<User>();
+
+        using (var connection = new NpgsqlConnection(configuration.GetConnectionString("DefaultConnection")))
+        {
+            connection.Open();
+            var command = new NpgsqlCommand("SELECT Id, Username, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames FROM Users ORDER BY Elo DESC", connection);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    users.Add(new User(configuration)
+                    {
+                        Id = reader.GetInt32(0),
+                        UserName = reader.GetString(1),
+                        FullName = reader.GetString(2),
+                        EMail = reader.GetString(3),
+                        Coins = reader.GetInt32(4),
+                        Password = reader.GetString(5),
+                        SessionToken = reader.IsDBNull(6) ? null : reader.GetString(6),
+                        Elo = reader.GetInt32(7),
+                        Wins = reader.GetInt32(8),
+                        Losses = reader.GetInt32(9),
+                        TotalGames = reader.GetInt32(10)
+                    });
+                }
+            }
+        }
+
+        return users;
+    }
+
+
 }
 

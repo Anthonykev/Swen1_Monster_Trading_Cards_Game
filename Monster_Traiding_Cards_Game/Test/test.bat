@@ -41,6 +41,8 @@ curl -X POST http://127.0.0.1:12000/register -H "Content-Type: application/json"
 curl -X POST http://127.0.0.1:12000/login -H "Content-Type: application/json" -d "{\"username\":\"kevin\",\"password\":\"password123\"}"
 curl -X POST http://127.0.0.1:12000/login -H "Content-Type: application/json" -d "{\"username\":\"mike\",\"password\":\"password123\"}"
 
+# ELO-Rangliste abrufen
+curl -X GET http://127.0.0.1:12000/get-elo-ranking
 
 
 # Benutzer ausloggen
