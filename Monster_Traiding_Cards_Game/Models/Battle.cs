@@ -37,8 +37,8 @@ namespace Monster_Trading_Cards_Game.Models
 
             int roundCount = 0;
             int drawCount = 0;
-            const int maxRounds = 300;
-            const int maxConsecutiveDraws = 10;
+            const int maxRounds = 150;
+            const int maxConsecutiveDraws = 15;
             Random random = new Random();
 
             while (Player1.Deck.Count > 0 && Player2.Deck.Count > 0 && roundCount < maxRounds)

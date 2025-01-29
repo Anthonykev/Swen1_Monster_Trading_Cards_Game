@@ -1,0 +1,228 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" GroupingSetting="Access">
+  <Class Name="Monster_Trading_Cards_Game.Program">
+    <Position X="0.5" Y="5.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAgAAAAAAAEAQAAAAAAAAAAAAAAAAABAAAAAA=</HashCode>
+      <FileName>Program.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="System.Object">
+    <Position X="29.75" Y="0.5" Width="2" />
+    <TypeIdentifier />
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Repositories.BattleRepository">
+    <Position X="5.5" Y="5.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAIAAAAAAAAAAA=</HashCode>
+      <FileName>Repositories\BattleRepository.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Repositories.BattleRoundRepository">
+    <Position X="11.25" Y="5.75" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIIAAAAAAAAAAA=</HashCode>
+      <FileName>Repositories\BattleRoundRepository.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Repositories.CardRepository">
+    <Position X="20.25" Y="5.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAACAAAAAAAAAAAAAAAAAIAAAAAAAAAgA=</HashCode>
+      <FileName>Repositories\CardRepository.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Repositories.LobbyRepository">
+    <Position X="3.25" Y="5.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAIAAAAAAAIAAgAAAAAAAAIAAEAAAAABAA=</HashCode>
+      <FileName>Repositories\LobbyRepository.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Repositories.PackageRepository">
+    <Position X="13.5" Y="5.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAAAAAAAAAAAAAAAAAAAABYIABAAAAgAAA=</HashCode>
+      <FileName>Repositories\PackageRepository.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Repositories.TradeRepository">
+    <Position X="22.5" Y="5.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAIAAAAAAAAAAA=</HashCode>
+      <FileName>Repositories\TradeRepository.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Repositories.UserDeckRepository">
+    <Position X="7.75" Y="5.25" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>AEAAAAAAAAAAAAIAAAAAAAABIAAAAAAABCAAAAAAAAA=</HashCode>
+      <FileName>Repositories\UserDeckRepository.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Repositories.UserRepository">
+    <Position X="16.25" Y="5.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAACAAAAQAAAQAAAAAAAAAAgAAQABAIACAIABAAQAA=</HashCode>
+      <FileName>Repositories\UserRepository.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Repositories.UserStackRepository">
+    <Position X="24.75" Y="5.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAIAAAAAAAAAAE=</HashCode>
+      <FileName>Repositories\UserStackRepository.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Network.Handler">
+    <Position X="30.75" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAEAAAAAAAASAAAAAAAAAAIAAAAAAAAAAAA=</HashCode>
+      <FileName>Network\Handler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Network.HttpHeader">
+    <Position X="36.25" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Network\HttpHeader.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Network.HttpStatusCode">
+    <Position X="27.25" Y="5.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAgACAAAAAEBAAAACAA=</HashCode>
+      <FileName>Network\HttpStatusCodes.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Network.HttpSvr">
+    <Position X="34" Y="5.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAACAAAAAAAAAAAAAQAAgIAAAAAAAAAI=</HashCode>
+      <FileName>Network\HttpSvr.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Network.HttpSvrEventArgs">
+    <Position X="59.25" Y="4.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAQIAAAAwAAAACAAAAEAAAAIAAAAAAAA=</HashCode>
+      <FileName>Network\HttpSvrEventArgs.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Network.SessionHandler">
+    <Position X="28.25" Y="10.75" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAQAAQAAAAAAAAAAAAAAAEIIAAEAAAIABAA=</HashCode>
+      <FileName>Network\SessionHandler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Network.Token">
+    <Position X="38.5" Y="5.25" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAQAEAAAAAAAAAIAAAAAAAAAAAAgAAAAAAA=</HashCode>
+      <FileName>Network\Token.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Network.UserHandler">
+    <Position X="33" Y="11.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>gAAAAAAgAgBQAEAAAAAAAAQAAAAAAAIABAGAAAAAAAA=</HashCode>
+      <FileName>Network\UserHandler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Models.Battle">
+    <Position X="41" Y="5.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAwACAAAAAAAAACAAAAAEAAAAAABA=</HashCode>
+      <FileName>Models\Battle.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Models.Card">
+    <Position X="48.75" Y="5.75" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAACAQCAAAAAAAAAAAAAAAQAAAAAAAAAAAAAEAAAAQA=</HashCode>
+      <FileName>Models\Card.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Models.MonsterCard">
+    <Position X="47.5" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAA=</HashCode>
+      <FileName>Models\MonsterCard.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Models.Round">
+    <Position X="45.75" Y="5.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAEAAAAwACAAAQAAAQAAAAAgAEAAAAAAAA=</HashCode>
+      <FileName>Models\Round.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Models.SpellCard">
+    <Position X="50.5" Y="9.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAA=</HashCode>
+      <FileName>Models\SpellCard.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="User">
+    <Position X="43.5" Y="5.25" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAKAIAAAAAkAYBBAAACCQAogKAAAAAiAQFIBAEAAIA=</HashCode>
+      <FileName>Models\User.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Exceptions.UserException">
+    <Position X="59.5" Y="3" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Exceptions\UserException.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Database.CreateTables">
+    <Position X="52" Y="5.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAABAAAAAAAAAAAAAAAAIAAAAAAAAAAA=</HashCode>
+      <FileName>Database\CreateTables.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Trading_Cards_Game.Database.SeedUsers">
+    <Position X="56.75" Y="3.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Database\SeedUsers.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Monster_Traiding_Cards.Database.Database">
+    <Position X="54.25" Y="5.25" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAAAAAAAAAAAAAAUAAAABAIQAAAABAAAAA=</HashCode>
+      <FileName>Database\Database.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="Monster_Trading_Cards_Game.Interfaces.IHandler">
+    <Position X="57.25" Y="9" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAA=</HashCode>
+      <FileName>Interfaces\IHandler.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Enum Name="Monster_Trading_Cards_Game.Models.ElementType">
+    <Position X="60.75" Y="8.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Models\Card.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Delegate Name="Monster_Trading_Cards_Game.Network.HttpSvrEventHandler">
+    <Position X="59" Y="9" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAIAAAAAQAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Network\HttpSvrEventHandler.cs</FileName>
+    </TypeIdentifier>
+  </Delegate>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
