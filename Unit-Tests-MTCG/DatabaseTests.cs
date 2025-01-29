@@ -102,7 +102,42 @@ namespace Unit_Tests_MTCG
             TestChooseDeck("admin2", "fixed-token-2");
         }
 
+
+
         [Priority(9)]
+        [TestMethod]
+        public void TestChangeMotto()
+        {
+            // Arrange
+            var user = User.Get("admin", _configuration);
+            Assert.IsNotNull(user, "User 'admin' should exist.");
+
+            // Act
+            user.Motto = "New Motto";
+            user.Save(user.UserName, user.SessionToken);
+
+            // Assert
+            var updatedUser = User.Get("admin", _configuration);
+            Assert.IsNotNull(updatedUser, "Updated user 'admin' should exist.");
+            Assert.AreEqual("New Motto", updatedUser.Motto, "The motto should be updated successfully.");
+        }
+
+        [Priority(10)]
+        [TestMethod]
+        public void TestGetUsersSortedByElo()
+        {
+            // Act
+            var users = User.GetUsersSortedByElo(_configuration);
+
+            // Assert
+            Assert.IsNotNull(users, "Users should be retrieved successfully.");
+            Assert.IsTrue(users.Count > 0, "There should be at least one user.");
+            Assert.IsTrue(users.SequenceEqual(users.OrderByDescending(u => u.Elo)), "Users should be sorted by Elo in descending order.");
+        }
+
+
+
+        [Priority(11)]
         [TestMethod]
         public void TestUserExists()
         {
