@@ -183,8 +183,6 @@ namespace Monster_Trading_Cards_Game.Models
                             {
                                 Player1.Deck.Remove(card);
                                 OriginalDecks[Player2.Id].Add(card);
-                                userDeckRepository.RemoveCardFromUserDeck(Player1.Id, card.Id, connection, transaction);
-                                userDeckRepository.AddCardToUserDeck(Player2.Id, card.Id, connection, transaction);
                             }
                         }
 
@@ -194,8 +192,6 @@ namespace Monster_Trading_Cards_Game.Models
                             {
                                 Player2.Deck.Remove(card);
                                 OriginalDecks[Player1.Id].Add(card);
-                                userDeckRepository.RemoveCardFromUserDeck(Player2.Id, card.Id, connection, transaction);
-                                userDeckRepository.AddCardToUserDeck(Player1.Id, card.Id, connection, transaction);
                             }
                         }
 
@@ -212,5 +208,6 @@ namespace Monster_Trading_Cards_Game.Models
                 }
             }
         }
+
     }
 }

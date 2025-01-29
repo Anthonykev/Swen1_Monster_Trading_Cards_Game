@@ -145,6 +145,7 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
         }
 
+
         public void ClearLobby()
         {
             try

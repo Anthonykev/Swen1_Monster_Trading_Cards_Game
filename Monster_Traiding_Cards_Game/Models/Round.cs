@@ -73,25 +73,7 @@ namespace Monster_Trading_Cards_Game.Models
             loser.Deck.Remove(card);
             winner.Deck.Add(card);
 
-            // Update the database
-            using (var connection = new NpgsqlConnection(_userDeckRepository.ConnectionString))
-            {
-                connection.Open();
-                using (var transaction = connection.BeginTransaction())
-                {
-                    try
-                    {
-                        _userDeckRepository.RemoveCardFromUserDeck(loser.Id, card.Id, connection, transaction);
-                        _userDeckRepository.AddCardToUserDeck(winner.Id, card.Id, connection, transaction);
-                        transaction.Commit();
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error transferring card: {ex.Message}");
-                        transaction.Rollback();
-                    }
-                }
-            }
+            
         }
 
 
