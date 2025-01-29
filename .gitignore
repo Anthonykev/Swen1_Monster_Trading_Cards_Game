@@ -58,3 +58,8 @@ _ReSharper*/
 # NuGet v3's project.json files produces more ignoreable files
 *.nuget.props
 *.nuget.targets
+
+
+# Ignoriere Setup.txt in Test-Ordner
+Test/Setup.txt
+Monster_Traiding_Cards_Game/Test/Setup.txt
