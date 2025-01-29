@@ -12,20 +12,12 @@ namespace Monster_Trading_Cards_Game.Models
         public User Player2 { get; private set; }
         public User? Winner { get; private set; }
 
-        private Dictionary<int, List<Card>> OriginalDecks { get; set; }
         private readonly IConfiguration _configuration;
 
         public Battle(User player1, User player2, IConfiguration configuration)
         {
             Player1 = player1 ?? throw new ArgumentNullException(nameof(player1), "Player1 cannot be null");
             Player2 = player2 ?? throw new ArgumentNullException(nameof(player2), "Player2 cannot be null");
-
-            OriginalDecks = new Dictionary<int, List<Card>>
-            {
-                { player1.Id, new List<Card>(player1.Deck) },
-                { player2.Id, new List<Card>(player2.Deck) }
-            };
-
             _configuration = configuration;
         }
 
@@ -75,7 +67,9 @@ namespace Monster_Trading_Cards_Game.Models
 
             DetermineWinner();
 
-            ReturnCardsToOriginalOwners();
+            // Decks leeren
+            Player1.Deck.Clear();
+            Player2.Deck.Clear();
 
             Player1.Save(Player1.UserName, Player1.SessionToken);
             Player2.Save(Player2.UserName, Player2.SessionToken);
@@ -133,14 +127,6 @@ namespace Monster_Trading_Cards_Game.Models
                 player1.Elo += (int)(kFactor * (0.5 - expectedScore1));
                 player2.Elo += (int)(kFactor * (0.5 - expectedScore2));
             }
-        }
-
-
-        private void ReturnCardsToOriginalOwners()
-        {
-            Player1.Deck = new List<Card>(OriginalDecks[Player1.Id]);
-            Player2.Deck = new List<Card>(OriginalDecks[Player2.Id]);
-            Console.WriteLine("Decks wurden auf den Originalzustand zurückgesetzt.");
         }
     }
 }

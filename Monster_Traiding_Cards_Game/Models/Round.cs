@@ -72,12 +72,7 @@ namespace Monster_Trading_Cards_Game.Models
         {
             loser.Deck.Remove(card);
             winner.Deck.Add(card);
-
-            
         }
-
-
-
 
         /// <summary>Selects a random card from the deck.</summary>
         private Card GetRandomCard(System.Collections.Generic.List<Card> deck, Random random)

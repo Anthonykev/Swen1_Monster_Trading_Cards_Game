@@ -4,7 +4,7 @@ using Monster_Trading_Cards_Game.Network;
 using Monster_Trading_Cards_Game.Repositories;
 using Npgsql;
 using System.Security.Authentication;
-using System.Security.Cryptography; // Hinzugefügt
+using System.Security.Cryptography;
 using System.Text;
 
 public sealed class User
@@ -142,18 +142,6 @@ public sealed class User
 
         // Karteninformationen für das neue Deck laden
         Deck = cardIds.Select(cardId => cardRepository.GetCardById(cardId)).Where(card => card != null).ToList();
-    }
-
-    public void ReturnDeckToStack(string username, string token)
-    {
-        if (!IsAuthenticated(username, token))
-        {
-            throw new AuthenticationException("User is not authenticated.");
-        }
-
-        Stack.AddRange(Deck);
-        Deck.Clear();
-        Save(username, token);
     }
 
     public static (bool Success, string Token) Logon(string userName, string password, IConfiguration configuration)
@@ -295,6 +283,7 @@ public sealed class User
         }
         return null;
     }
+
     public static List<User> GetUsersSortedByElo(IConfiguration configuration)
     {
         List<User> users = new List<User>();
@@ -327,7 +316,4 @@ public sealed class User
 
         return users;
     }
-
-
 }
-
