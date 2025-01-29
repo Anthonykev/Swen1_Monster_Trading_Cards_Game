@@ -76,17 +76,7 @@ Die relevanten Abgabedateien befinden sich im Ordner `Abgabe`:
 
 ---
 
-## **👥 Mitwirkende**
-- **Projektleiter & Entwickler:** Anthonykev
 
-Falls du das Projekt verbessern möchtest, erstelle bitte ein Issue oder einen Pull Request.
-
----
-
-## **📜 Lizenz**
-Dieses Projekt steht unter der **MIT-Lizenz**. Siehe [LICENSE](LICENSE) für weitere Details.
-
-📌 **Offizielles Repository:** [GitHub - MTCG](https://github.com/Anthonykev/Swen1_Monster_Trading_Cards_Game)
 
 
 
