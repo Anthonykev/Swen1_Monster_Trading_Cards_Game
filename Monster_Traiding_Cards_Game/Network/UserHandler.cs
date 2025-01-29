@@ -522,6 +522,39 @@ namespace Monster_Trading_Cards_Game.Network
                 }
                 return true;
             }
+            else if ((e.Path.TrimEnd('/', ' ', '\t') == "/get-all-users-mottos") && (e.Method == "GET"))
+            {
+                try
+                {
+                    // Benutzer und deren Mottos abrufen
+                    var usersWithMottos = User.GetAllUsersWithMottos(_configuration).ToList();
+
+                    // Ausgabe der Benutzer und deren Mottos auf dem Server
+                    Console.WriteLine("Benutzer und deren Mottos:");
+                    foreach (var user in usersWithMottos)
+                    {
+                        Console.WriteLine($"Benutzername: {user.GetType().GetProperty("UserName")?.GetValue(user)}, Motto: {user.GetType().GetProperty("Motto")?.GetValue(user)}");
+                    }
+
+                    e.Reply(HttpStatusCode.OK, new JsonObject
+                    {
+                        ["success"] = true,
+                        ["message"] = "Benutzer und deren Mottos wurden ausgegeben.",
+                        ["users"] = JsonSerializer.Serialize(usersWithMottos)
+                    }.ToJsonString());
+                }
+                catch (Exception ex)
+                {
+                    e.Reply(HttpStatusCode.INTERNAL_SERVER_ERROR, new JsonObject
+                    {
+                        ["success"] = false,
+                        ["message"] = $"An unexpected error occurred: {ex.Message}"
+                    }.ToJsonString());
+                }
+                return true;
+            }
+
+
 
 
             return false;

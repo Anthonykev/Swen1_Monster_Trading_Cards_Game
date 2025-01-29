@@ -184,7 +184,7 @@ namespace Monster_Trading_Cards_Game.Repositories
                         command.Parameters.AddWithValue("@wins", user.Wins);
                         command.Parameters.AddWithValue("@losses", user.Losses);
                         command.Parameters.AddWithValue("@totalGames", user.TotalGames);
-                        command.Parameters.AddWithValue("@motto", user.Motto); // Motto speichern
+                        command.Parameters.AddWithValue("@motto", user.Motto); // Motto speichern "Unique Feature"
                         command.Parameters.AddWithValue("@username", user.UserName);
                         command.ExecuteNonQuery();
 
@@ -231,6 +231,7 @@ namespace Monster_Trading_Cards_Game.Repositories
             }
             return cardNames;
         }
+
 
         public Card CreateCard(string cardName)
         {

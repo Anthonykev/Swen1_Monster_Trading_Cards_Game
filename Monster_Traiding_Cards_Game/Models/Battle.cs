@@ -80,21 +80,28 @@ namespace Monster_Trading_Cards_Game.Models
             if (Player1.Deck.Count > 0 && Player2.Deck.Count == 0)
             {
                 Winner = Player1;
-                Console.WriteLine($"{Player1.UserName} gewinnt!");
+                Console.WriteLine("--------------------------------");
+                Console.WriteLine($"Player: {Player1.UserName} gewinnt!");
+                Console.WriteLine($"{Player1.UserName} Motto: {Player1.Motto}");
                 Player1.Wins++;
                 Player2.Losses++;
             }
             else if (Player2.Deck.Count > 0 && Player1.Deck.Count == 0)
             {
                 Winner = Player2;
-                Console.WriteLine($"{Player2.UserName} gewinnt!");
+                Console.WriteLine("--------------------------------");
+                Console.WriteLine($"Player: {Player2.UserName} wins!!!!");
+                Console.WriteLine($"{Player2.UserName} motto: {Player2.Motto}");
                 Player2.Wins++;
                 Player1.Losses++;
             }
             else
             {
                 Winner = null;
+                Console.WriteLine("--------------------------------");
                 Console.WriteLine("Das Battle endet unentschieden!");
+                Console.WriteLine($"{Player1.UserName} Motto: {Player1.Motto}");
+                Console.WriteLine($"{Player2.UserName} motto: {Player2.Motto}");
             }
 
             // Aktualisieren der Gesamtspiele
@@ -107,7 +114,7 @@ namespace Monster_Trading_Cards_Game.Models
 
         private void UpdateElo(User player1, User player2)
         {
-            // Beispielhafte Elo-Berechnung
+            
             const int kFactor = 32;
             double expectedScore1 = 1.0 / (1.0 + Math.Pow(10, (player2.Elo - player1.Elo) / 400.0));
             double expectedScore2 = 1.0 / (1.0 + Math.Pow(10, (player1.Elo - player2.Elo) / 400.0));

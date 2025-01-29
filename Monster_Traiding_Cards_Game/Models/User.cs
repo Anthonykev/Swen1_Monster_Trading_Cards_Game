@@ -30,7 +30,7 @@ public sealed class User
     public int Wins { get; set; } = 0;
     public int Losses { get; set; } = 0;
     public int TotalGames { get; set; } = 0;
-    public string Motto { get; set; } = string.Empty; // Neue Eigenschaft für das Motto
+    public string Motto { get; set; } = string.Empty; 
 
     public void Save(string username, string token)
     {
@@ -199,7 +199,7 @@ public sealed class User
         using (var connection = new NpgsqlConnection(configuration.GetConnectionString("DefaultConnection")))
         {
             connection.Open();
-            var command = new NpgsqlCommand("SELECT Id, Username, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames FROM Users WHERE Id = @userId", connection);
+            var command = new NpgsqlCommand("SELECT Id, Username, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames, Motto FROM Users WHERE Id = @userId", connection);
             command.Parameters.AddWithValue("@userId", userId);
             using (var reader = command.ExecuteReader())
             {
@@ -217,7 +217,8 @@ public sealed class User
                         Elo = reader.GetInt32(7),
                         Wins = reader.GetInt32(8),
                         Losses = reader.GetInt32(9),
-                        TotalGames = reader.GetInt32(10)
+                        TotalGames = reader.GetInt32(10),
+                        Motto = reader.IsDBNull(11) ? string.Empty : reader.GetString(11) 
                     };
                 }
             }
@@ -229,6 +230,32 @@ public sealed class User
     {
         return _Users.Values;
     }
+    public static IEnumerable<object> GetAllUsersWithMottos(IConfiguration configuration)
+    {
+        List<object> usersWithMottos = new List<object>();
+
+        using (var connection = new NpgsqlConnection(configuration.GetConnectionString("DefaultConnection")))
+        {
+            connection.Open();
+            var command = new NpgsqlCommand("SELECT Username, Motto FROM Users", connection);
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    usersWithMottos.Add(new
+                    {
+                        UserName = reader.GetString(0),
+                        Motto = reader.IsDBNull(1) ? "-" : reader.GetString(1)
+                    });
+                }
+            }
+        }
+
+        return usersWithMottos;
+    }
+
+
+
 
     private static string HashPassword(string password)
     {
@@ -252,7 +279,7 @@ public sealed class User
             using (var connection = new NpgsqlConnection(configuration.GetConnectionString("DefaultConnection")))
             {
                 connection.Open();
-                var command = new NpgsqlCommand("SELECT Id, Username, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames FROM Users WHERE Username = @username AND SessionToken = @token", connection);
+                var command = new NpgsqlCommand("SELECT Id, Username, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames, Motto FROM Users WHERE Username = @username AND SessionToken = @token", connection);
                 command.Parameters.AddWithValue("@username", username);
                 command.Parameters.AddWithValue("@token", token);
                 using (var reader = command.ExecuteReader())
@@ -271,7 +298,8 @@ public sealed class User
                             Elo = reader.GetInt32(7),
                             Wins = reader.GetInt32(8),
                             Losses = reader.GetInt32(9),
-                            TotalGames = reader.GetInt32(10)
+                            TotalGames = reader.GetInt32(10),
+                            Motto = reader.IsDBNull(11) ? string.Empty : reader.GetString(11) 
                         };
                     }
                 }
@@ -291,7 +319,7 @@ public sealed class User
         using (var connection = new NpgsqlConnection(configuration.GetConnectionString("DefaultConnection")))
         {
             connection.Open();
-            var command = new NpgsqlCommand("SELECT Id, Username, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames FROM Users ORDER BY Elo DESC", connection);
+            var command = new NpgsqlCommand("SELECT Id, Username, FullName, EMail, Coins, Password, SessionToken, Elo, Wins, Losses, TotalGames, Motto FROM Users ORDER BY Elo DESC", connection);
             using (var reader = command.ExecuteReader())
             {
                 while (reader.Read())
@@ -308,7 +336,8 @@ public sealed class User
                         Elo = reader.GetInt32(7),
                         Wins = reader.GetInt32(8),
                         Losses = reader.GetInt32(9),
-                        TotalGames = reader.GetInt32(10)
+                        TotalGames = reader.GetInt32(10),
+                        Motto = reader.IsDBNull(11) ? string.Empty : reader.GetString(11) 
                     });
                 }
             }
