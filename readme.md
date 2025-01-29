@@ -55,6 +55,7 @@ Das **Monster Trading Card Game (MTCG)** ist ein serverbasiertes Sammelkartenspi
 | `POST` | `/battle-request` | Fordert einen Kampf an. |
 | `GET` | `/get-elo-ranking` | Gibt die Rangliste basierend auf ELO zurück. |
 | `POST` | `/set-motto` | Ändert das Motto des Benutzers. |
+| `GET` | `//get-all-users-mottos` | Ruft das Motto des Benutzers ab. |
 
 ---
 
